@@ -27,8 +27,7 @@ export default function ResetPasswordPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        const debug = data._debug ? ` (status ${data._debug.rawStatus}, body: ${data._debug.rawBody})` : ''
-        setError((data.error || 'Erreur inconnue') + debug)
+        setError(data.error || 'Erreur inconnue')
       } else {
         setSent(true);
         setMessage('Email envoyé ! Vérifie ta boîte de réception.');
