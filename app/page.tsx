@@ -38,7 +38,7 @@ export default async function Home() {
           As-tu-lu ?
         </h1>
         <p className="text-xl text-gray-600 mb-8 text-center max-w-2xl">
-          Le point de rencontre entre lecteurs passionnés et auteurs francophones.
+          Le point de rencontre entre lecteurs passionnés et auteurs francophones. L&apos;alternative française à BookFunnel.
         </p>
         <div className="flex gap-4 justify-center">
           <Link href="/dashboard" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">

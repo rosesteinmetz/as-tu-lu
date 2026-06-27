@@ -17,7 +17,6 @@ export default function DashboardAuteur() {
   const [cover, setCover] = useState<File | null>(null);
   const [epub, setEpub] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
-  const [mobi, setMobi] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingBooks, setLoadingBooks] = useState(true);
 
@@ -59,7 +58,6 @@ export default function DashboardAuteur() {
     }
     if (epub) formData.append('epub', epub);
     if (pdf) formData.append('pdf', pdf);
-    if (mobi) formData.append('mobi', mobi);
 
     try {
       const res = await fetch('/api/books', {
@@ -77,7 +75,6 @@ export default function DashboardAuteur() {
       setCover(null);
       setEpub(null);
       setPdf(null);
-      setMobi(null);
       setAcceptedTerms(false);
       router.refresh();
     } catch (err) {
@@ -198,7 +195,7 @@ export default function DashboardAuteur() {
 
           <div className="border-t pt-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Fichiers du livre</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Format ePub</label>
                 <input type="file" accept=".epub" onChange={(e) => setEpub(e.target.files?.[0] || null)} className="text-xs w-full" />
@@ -207,11 +204,8 @@ export default function DashboardAuteur() {
                 <label className="block text-xs text-gray-500 mb-1">Format PDF</label>
                 <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Format Kindle</label>
-                <input type="file" accept=".epub,.mobi" onChange={(e) => setMobi(e.target.files?.[0] || null)} className="text-xs w-full" />
-              </div>
             </div>
+            <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n'est plus requis — Amazon accepte l'ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
           </div>
 
           <label className="flex gap-2 text-xs text-gray-500 items-start border-t pt-4">

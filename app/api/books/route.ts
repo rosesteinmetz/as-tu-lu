@@ -77,12 +77,11 @@ export async function POST(request: Request) {
   const coverFile = formData.get('cover') as File | null
   const epubFile = formData.get('epub') as File | null
   const pdfFile = formData.get('pdf') as File | null
-  const mobiFile = formData.get('mobi') as File | null
 
   if (coverFile && coverFile.size > MAX_IMAGE_SIZE) {
     return NextResponse.json({ error: `L'image de couverture dépasse 5 Mo.` }, { status: 400 })
   }
-  for (const f of [epubFile, pdfFile, mobiFile]) {
+  for (const f of [epubFile, pdfFile]) {
     if (f && f.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: `Un des fichiers dépasse 50 Mo.` }, { status: 400 })
     }
@@ -91,7 +90,6 @@ export async function POST(request: Request) {
   let cover_url = null
   let epub_url = null
   let pdf_url = null
-  let mobi_url = null
 
   const slug = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase()
   const baseName = `${slug(title)}_${slug(author)}`
@@ -122,13 +120,10 @@ export async function POST(request: Request) {
     if (pdfFile && pdfFile.size > 0) {
       pdf_url = await uploadFile(pdfFile, 'pdf')
     }
-    if (mobiFile && mobiFile.size > 0) {
-      mobi_url = await uploadFile(mobiFile, 'mobi')
-    }
 
     const { data: book, error } = await supabase
       .from('books')
-      .insert({ title, author, genre, description, cover_url, epub_url, pdf_url, mobi_url, user_id: user.id })
+      .insert({ title, author, genre, description, cover_url, epub_url, pdf_url, user_id: user.id })
       .select()
       .single()
 

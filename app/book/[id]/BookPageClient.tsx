@@ -13,7 +13,6 @@ type Book = {
   cover_url: string | null
   epub_url: string | null
   pdf_url: string | null
-  mobi_url: string | null
   user_id: string | null
   download_count: number
 }

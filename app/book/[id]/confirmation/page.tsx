@@ -13,7 +13,6 @@ type Book = {
   cover_url: string | null;
   epub_url: string | null;
   pdf_url: string | null;
-  mobi_url: string | null;
 };
 
 export default function ConfirmationPage() {
@@ -80,7 +79,7 @@ export default function ConfirmationPage() {
       <div className="w-full max-w-md flex flex-col gap-3 mb-8">
         {dl(book.epub_url, 'Format ePub', 'ePub')}
         {dl(book.pdf_url, 'Format PDF', 'PDF')}
-        {dl(book.mobi_url, 'Format Kindle (mobi)', 'MOBI')}
+        <p className="text-xs text-gray-400 text-center">Pour Kindle : télécharge l'ePub puis utilise <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
       </div>
 
       {newsletterErrors.length > 0 && (

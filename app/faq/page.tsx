@@ -10,15 +10,15 @@ export default function FAQPage() {
     },
     {
       q: "Comment réinitialiser mon mot de passe ?",
-      a: "Actuellement, la réinitialisation n'est pas encore disponible. Contacte-nous si tu as besoin d'aide. (Bientôt : un lien 'Mot de passe oublié' sera ajouté à la connexion.)",
+      a: "Sur la page de connexion, clique sur 'Mot de passe oublié ?'. Saisis ton email, tu recevras un lien pour choisir un nouveau mot de passe. (Nécessite SMTP configuré dans Supabase Auth pour recevoir l'email.)",
     },
     {
       q: "Comment ajouter un livre ?",
-      a: "Dans l'Espace Auteur, remplis le formulaire 'Ajouter un livre' : titre, auteur, genre, description, puis télécharge la couverture et les fichiers de l'ebook (ePub, PDF, MOBI/Kindle). Coche la case 'CGU Auteurs' pour valider. Le livre apparaîtra immédiatement sur la page d'accueil et sur ta page auteur.",
+      a: "Dans l'Espace Auteur, remplis le formulaire 'Ajouter un livre' : titre, auteur, genre, description, puis télécharge la couverture et les fichiers de l'ebook (ePub, PDF). Coche la case 'CGU Auteurs' pour valider. Le livre apparaîtra immédiatement sur la page d'accueil et sur ta page auteur. Le format Kindle se fait désormais via l'ePub (Amazon Send to Kindle).",
     },
     {
       q: "Quels formats d'ebook sont acceptés ?",
-      a: "Tu peux proposer tes livres aux formats ePub, PDF et MOBI (Kindle). Chaque fichier est limité à 50 Mo. Les images de couverture sont limitées à 5 Mo.",
+      a: "Tu peux proposer tes livres aux formats ePub et PDF. Le format Kindle (MOBI) n'est plus utilisé — Amazon accepte désormais l'ePub directement via Send to Kindle. Chaque fichier est limité à 50 Mo. Toutes les images (couverture, avatar, galerie) sont limitées à 5 Mo et automatiquement compressées.",
     },
     {
       q: "Comment les lecteurs téléchargent-ils mes livres ?",
@@ -35,10 +35,6 @@ export default function FAQPage() {
     {
       q: "Comment voir mes abonnés ?",
       a: "Dans Espace Auteur → Abonnés, tu vois la liste des lecteurs qui ont téléchargé tes livres (uniquement les tiens, pas ceux des autres auteurs). Tu peux exporter la liste en CSV.",
-    },
-    {
-      q: "Le compteur de téléchargement ne s'incrémente pas ?",
-      a: "Vérifie que la fonction SQL 'increment_download_count' est bien créée dans Supabase (voir le fichier schema.sql pour le script). Sans elle, le compteur n'augmente pas à cause des règles RLS.",
     },
     {
       q: "Puis-je modifier ou supprimer un livre ?",
