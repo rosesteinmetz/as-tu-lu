@@ -15,19 +15,23 @@ export default function ResetPasswordPage() {
     setError('');
     setLoading(true);
 
-    const form = new FormData(e.currentTarget);
-    const email = form.get('email') as string;
+    try {
+      const form = new FormData(e.currentTarget);
+      const email = form.get('email') as string;
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/update-password`,
-    });
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSent(true);
-      setMessage('Un email de réinitialisation a été envoyé. Vérifie ta boîte de réception.');
+      if (error) {
+        setError(`Erreur : ${error.message}`);
+      } else {
+        setSent(true);
+        setMessage('Email envoyé ! Vérifie ta boîte de réception.');
+      }
+    } catch (err) {
+      setError(`Exception : ${(err as Error).message}`);
     }
     setLoading(false);
   }
