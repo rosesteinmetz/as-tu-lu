@@ -12,10 +12,14 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setMessage('');
     setError('');
-    const form = new FormData(e.currentTarget);
-    const result = await resetPassword(form) as { error?: string; success?: string };
-    if (result.error) setError(result.error);
-    else { setSent(true); setMessage(result.success || ''); }
+    try {
+      const form = new FormData(e.currentTarget);
+      const result = await resetPassword(form) as { error?: string; success?: string };
+      if (result?.error) setError(result.error);
+      else { setSent(true); setMessage(result?.success || ''); }
+    } catch {
+      setError('Erreur lors de l\'envoi. Vérifie que le SMTP est configuré dans Supabase Auth.');
+    }
   }
 
   if (sent) {
