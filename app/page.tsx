@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import BookCard from './BookCard';
 
+export const dynamic = 'force-dynamic';
+
 async function getBooks() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
