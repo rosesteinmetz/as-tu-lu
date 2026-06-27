@@ -1,21 +1,35 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { resetPassword } from '../actions';
+import { createClient } from '@/lib/supabase-browser';
 
 export default function ResetPasswordPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage('');
     setError('');
+    setLoading(true);
+
     const form = new FormData(e.currentTarget);
-    const result = await resetPassword(form) as { error?: string; success?: string };
-    if (result?.error) setError(result.error);
-    else { setSent(true); setMessage(result?.success || ''); }
+    const email = form.get('email') as string;
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setSent(true);
+      setMessage('Un email de réinitialisation a été envoyé. Vérifie ta boîte de réception.');
+    }
+    setLoading(false);
   }
 
   if (sent) {
@@ -41,8 +55,8 @@ export default function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input name="email" type="email" placeholder="Ton adresse email" className="border p-3 rounded-lg text-sm" required />
-          <button type="submit" className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm">
-            Envoyer le lien
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
+            {loading ? 'Envoi...' : 'Envoyer le lien'}
           </button>
         </form>
 
