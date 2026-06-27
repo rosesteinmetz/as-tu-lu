@@ -36,18 +36,22 @@ export async function login(formData: FormData) {
 }
 
 export async function resetPassword(formData: FormData) {
-  const email = formData.get('email') as string
-  const supabase = await createClient()
+  try {
+    const email = formData.get('email') as string
+    const supabase = await createClient()
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/update-password`,
-  })
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/update-password`,
+    })
 
-  if (error) {
-    return { error: error.message }
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { success: 'Un email de réinitialisation a été envoyé. Vérifie ta boîte de réception.' }
+  } catch (err) {
+    return { error: `Erreur : ${(err as Error).message}` }
   }
-
-  return { success: 'Un email de réinitialisation a été envoyé. Vérifie ta boîte de réception.' }
 }
 
 export async function updatePassword(formData: FormData) {
