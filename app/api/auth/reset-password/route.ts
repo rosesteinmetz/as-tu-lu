@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js'
+
 export async function POST(req: Request) {
   try {
     const { email } = await req.json()
@@ -14,25 +16,17 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Configuration serveur manquante' }, { status: 500 })
     }
 
-    const res = await fetch(`${supabaseUrl}/auth/v1/recover`, {
-      method: 'POST',
-      headers: {
-        'apikey': supabaseAnonKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        redirect_to: `${siteUrl}/auth/update-password`,
-      }),
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/update-password`,
     })
 
-    if (!res.ok) {
-      const body = await res.text()
-      console.error('Supabase auth error:', res.status, body)
-      return Response.json({ error: body || `Erreur ${res.status}` }, { status: 400 })
+    if (error) {
+      console.error('resetPasswordForEmail error:', JSON.stringify(error))
+      return Response.json({ error: error.message }, { status: 400 })
     }
 
-    const data = await res.json()
     return Response.json({ data })
   } catch (err) {
     console.error('reset-password exception:', err)
