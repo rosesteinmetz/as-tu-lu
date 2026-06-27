@@ -12,24 +12,47 @@ export async function POST(req: Request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase env vars')
       return Response.json({ error: 'Configuration serveur manquante' }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    // Test raw fetch first
+    const rawRes = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        redirect_to: `${siteUrl}/auth/update-password`,
+      }),
+    })
+    const rawBody = await rawRes.text()
 
+    if (rawRes.ok) {
+      // Raw fetch succeeded
+      return Response.json({ data: rawBody ? JSON.parse(rawBody) : {} })
+    }
+
+    // If raw fetch failed, try supabase-js
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${siteUrl}/auth/update-password`,
     })
 
     if (error) {
-      console.error('resetPasswordForEmail error:', JSON.stringify(error))
-      return Response.json({ error: error.message }, { status: 400 })
+      return Response.json({
+        error: error.message,
+        _debug: { rawStatus: rawRes.status, rawBody, email, siteUrl },
+      }, { status: 400 })
     }
 
     return Response.json({ data })
   } catch (err) {
-    console.error('reset-password exception:', err)
-    return Response.json({ error: (err as Error).message }, { status: 500 })
+    return Response.json({
+      error: (err as Error).message,
+      _debug: { exception: true },
+    }, { status: 500 })
   }
 }
