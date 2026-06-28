@@ -27,9 +27,9 @@ export default function BookCard({ book }: { book: Book }) {
   const CardContent = () => (
     <>
       {book.cover_url ? (
-        <img src={book.cover_url} alt={book.title} className="w-full h-48 object-cover rounded-lg mb-3" />
+        <img src={book.cover_url} alt={book.title} className="w-full aspect-[210/297] object-contain bg-gray-100 rounded-lg mb-3" />
       ) : (
-        <div className="w-full h-48 bg-blue-900 text-white rounded-lg flex items-center justify-center font-bold mb-3">
+        <div className="w-full aspect-[210/297] bg-blue-900 text-white rounded-lg flex items-center justify-center font-bold mb-3">
           [Couverture]
         </div>
       )}
@@ -52,7 +52,7 @@ export default function BookCard({ book }: { book: Book }) {
       <div className="flex gap-2 mt-2 flex-wrap">
         <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
         {book.is_free !== false ? (
-          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">Gratuit</span>
+          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
         ) : (
           <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">Disponible à l&apos;achat</span>
         )}

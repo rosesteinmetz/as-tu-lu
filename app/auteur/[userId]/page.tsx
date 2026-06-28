@@ -84,9 +84,9 @@ export default async function AuteurIndividuelPage({ params }: { params: Promise
               return (
                 <BookLink key={book.id} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4">
                   {book.cover_url ? (
-                    <img src={book.cover_url} alt={book.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+                    <img src={book.cover_url} alt={book.title} className="w-16 aspect-[210/297] object-contain bg-gray-100 rounded-lg flex-shrink-0" />
                   ) : (
-                    <div className="w-16 h-24 bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
+                    <div className="w-16 aspect-[210/297] bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
                   )}
                   <div>
                     <h3 className="font-bold text-gray-900">{book.title}</h3>
@@ -94,7 +94,7 @@ export default async function AuteurIndividuelPage({ params }: { params: Promise
                     <div className="flex gap-2 mt-2 flex-wrap">
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
                       {book.is_free !== false ? (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">Gratuit</span>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
                       ) : (
                         <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">Disponible à l&apos;achat</span>
                       )}

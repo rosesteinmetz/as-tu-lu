@@ -69,9 +69,9 @@ export default function BookPageClient({ book }: { book: Book }) {
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col items-center">
           {book.cover_url ? (
-            <img src={book.cover_url} alt={book.title} className="w-44 h-64 object-cover rounded-lg shadow-md mb-4" />
+            <img src={book.cover_url} alt={book.title} className="w-44 aspect-[210/297] object-contain bg-gray-100 rounded-lg shadow-md mb-4" />
           ) : (
-            <div className="w-44 h-64 bg-blue-900 text-white rounded-lg shadow-md flex items-center justify-center font-bold text-center p-4 mb-4">
+            <div className="w-44 aspect-[210/297] bg-blue-900 text-white rounded-lg shadow-md flex items-center justify-center font-bold text-center p-4 mb-4">
               [Couverture]
             </div>
           )}
@@ -85,7 +85,7 @@ export default function BookPageClient({ book }: { book: Book }) {
               </span>
             ) : (
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                Gratuit
+                GRATUIT
               </span>
             )}
           </div>
