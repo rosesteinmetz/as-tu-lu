@@ -14,6 +14,8 @@ export default function DashboardAuteur() {
   const [auteur, setAuteur] = useState('Céline Autrice');
   const [description, setDescription] = useState('');
   const [genre, setGenre] = useState('Romance');
+  const [isFree, setIsFree] = useState(true);
+  const [externalLink, setExternalLink] = useState('');
   const [cover, setCover] = useState<File | null>(null);
   const [epub, setEpub] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
@@ -48,6 +50,8 @@ export default function DashboardAuteur() {
     formData.append('author', auteur);
     formData.append('genre', genre);
     formData.append('description', description);
+    formData.append('is_free', String(isFree));
+    if (externalLink) formData.append('external_link', externalLink);
     if (cover) {
       if (cover.size > MAX_IMAGE_SIZE) {
         setMessage(`Erreur : L'image de couverture dépasse 5 Mo.`);
@@ -188,13 +192,42 @@ export default function DashboardAuteur() {
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full border p-2.5 rounded-lg text-sm" required />
           </div>
 
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Type de livre</h3>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="book_type" checked={isFree} onChange={() => setIsFree(true)} className="accent-blue-600" />
+                <span className="text-gray-700">Livre gratuit (téléchargement sur le site)</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="book_type" checked={!isFree} onChange={() => setIsFree(false)} className="accent-blue-600" />
+                <span className="text-gray-700">Livre payant (lien externe)</span>
+              </label>
+            </div>
+
+            {!isFree && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lien d'achat (Amazon, Fnac, etc.)</label>
+                <input
+                  type="url"
+                  value={externalLink}
+                  onChange={(e) => setExternalLink(e.target.value)}
+                  placeholder="https://www.amazon.fr/dp/..."
+                  className="w-full border p-2.5 rounded-lg text-sm"
+                  required={!isFree}
+                />
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Couverture du livre (image)</label>
             <input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] || null)} className="text-sm w-full" />
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Fichiers du livre</h3>
+          {isFree && (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Fichiers du livre</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Format ePub</label>
@@ -207,6 +240,7 @@ export default function DashboardAuteur() {
             </div>
             <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n'est plus requis — Amazon accepte l'ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
           </div>
+          )}
 
           <label className="flex gap-2 text-xs text-gray-500 items-start border-t pt-4">
             <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} required className="mt-0.5" />

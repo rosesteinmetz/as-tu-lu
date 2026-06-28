@@ -11,7 +11,7 @@ const supabase = createServerClient(
 async function getData(userId: string) {
   const [{ data: profile }, { data: books }] = await Promise.all([
     supabase.from('author_profiles').select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from('books').select('id, title, genre, cover_url, description').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('books').select('id, title, genre, cover_url, description, is_free, external_link').eq('user_id', userId).order('created_at', { ascending: false }),
   ]);
   return { profile, books: books || [] };
 }
@@ -76,23 +76,33 @@ export default async function AuteurIndividuelPage({ params }: { params: Promise
           <p className="text-gray-500 text-sm">Aucun livre disponible pour le moment.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {books.map((book) => (
-              <Link key={book.id} href={`/book/${book.id}`} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4">
-                {book.cover_url ? (
-                  <img src={book.cover_url} alt={book.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
-                ) : (
-                  <div className="w-16 h-24 bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
-                )}
-                <div>
-                  <h3 className="font-bold text-gray-900">{book.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{book.description}</p>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">Bonus gratuit</span>
+            {books.map((book) => {
+              const BookLink = book.external_link && book.is_free === false
+                ? ({ children, ...props }: any) => <a href={book.external_link!} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
+                : ({ children, ...props }: any) => <Link href={`/book/${book.id}`} {...props}>{children}</Link>;
+
+              return (
+                <BookLink key={book.id} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4">
+                  {book.cover_url ? (
+                    <img src={book.cover_url} alt={book.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+                  ) : (
+                    <div className="w-16 h-24 bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
+                  )}
+                  <div>
+                    <h3 className="font-bold text-gray-900">{book.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{book.description}</p>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
+                      {book.is_free !== false ? (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs">Gratuit</span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">Disponible à l&apos;achat</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </BookLink>
+              );
+            })}
           </div>
         )}
       </div>

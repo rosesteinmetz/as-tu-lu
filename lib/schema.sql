@@ -11,6 +11,8 @@ CREATE TABLE books (
   mobi_url TEXT,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   download_count INTEGER DEFAULT 0,
+  is_free BOOLEAN DEFAULT true,
+  external_link TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

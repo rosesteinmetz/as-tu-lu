@@ -11,6 +11,8 @@ export default function EditBookPage() {
   const [auteur, setAuteur] = useState('');
   const [genre, setGenre] = useState('Romance');
   const [description, setDescription] = useState('');
+  const [isFree, setIsFree] = useState(true);
+  const [externalLink, setExternalLink] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,6 +25,8 @@ export default function EditBookPage() {
         setAuteur(data.author || '');
         setGenre(data.genre || 'Romance');
         setDescription(data.description || '');
+        setIsFree(data.is_free !== false);
+        setExternalLink(data.external_link || '');
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -42,6 +46,8 @@ export default function EditBookPage() {
     formData.append('author', auteur);
     formData.append('genre', genre);
     formData.append('description', description);
+    formData.append('is_free', String(isFree));
+    if (externalLink) formData.append('external_link', externalLink);
 
     const res = await fetch(`/api/books/${id}`, {
       method: 'PUT',
@@ -137,6 +143,35 @@ export default function EditBookPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full border p-2.5 rounded-lg text-sm" required />
         </div>
+
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Type de livre</h3>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="radio" name="book_type" checked={isFree} onChange={() => setIsFree(true)} className="accent-blue-600" />
+              <span className="text-gray-700">Livre gratuit (téléchargement sur le site)</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="radio" name="book_type" checked={!isFree} onChange={() => setIsFree(false)} className="accent-blue-600" />
+              <span className="text-gray-700">Livre payant (lien externe)</span>
+            </label>
+          </div>
+
+          {!isFree && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lien d'achat (Amazon, Fnac, etc.)</label>
+              <input
+                type="url"
+                value={externalLink}
+                onChange={(e) => setExternalLink(e.target.value)}
+                placeholder="https://www.amazon.fr/dp/..."
+                className="w-full border p-2.5 rounded-lg text-sm"
+                required={!isFree}
+              />
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-3">
           <button type="submit" disabled={saving} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
             {saving ? 'Enregistrement...' : 'Enregistrer'}

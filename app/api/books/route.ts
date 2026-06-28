@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 
   let query = publicClient
     .from('books')
-    .select('id, title, author, genre, cover_url, user_id, download_count')
+    .select('id, title, author, genre, cover_url, user_id, download_count, is_free, external_link')
 
   if (userId) query = query.eq('user_id', userId)
 
@@ -73,6 +73,8 @@ export async function POST(request: Request) {
   const author = formData.get('author') as string
   const genre = formData.get('genre') as string
   const description = formData.get('description') as string
+  const isFree = formData.get('is_free') === 'true'
+  const externalLink = formData.get('external_link') as string
 
   const coverFile = formData.get('cover') as File | null
   const epubFile = formData.get('epub') as File | null
@@ -123,7 +125,13 @@ export async function POST(request: Request) {
 
     const { data: book, error } = await supabase
       .from('books')
-      .insert({ title, author, genre, description, cover_url, epub_url, pdf_url, user_id: user.id })
+      .insert({
+        title, author, genre, description,
+        cover_url, epub_url, pdf_url,
+        is_free: isFree,
+        external_link: isFree ? '' : (externalLink || ''),
+        user_id: user.id,
+      })
       .select()
       .single()
 

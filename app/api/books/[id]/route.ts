@@ -62,10 +62,16 @@ export async function PUT(
   const author = formData.get('author') as string
   const genre = formData.get('genre') as string
   const description = formData.get('description') as string
+  const isFree = formData.get('is_free') === 'true'
+  const externalLink = formData.get('external_link') as string
 
   const { data, error } = await supabase
     .from('books')
-    .update({ title, author, genre, description })
+    .update({
+      title, author, genre, description,
+      is_free: isFree,
+      external_link: isFree ? '' : (externalLink || ''),
+    })
     .eq('id', id)
     .eq('user_id', user.id)
     .select()
