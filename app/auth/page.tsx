@@ -35,7 +35,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full">
-        <h1 className="text-2xl font-bold text-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
           {mode === 'login' ? 'Connexion' : 'Créer un compte'}
         </h1>
 
@@ -55,7 +55,7 @@ export default function AuthPage() {
           )}
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-6">
           {mode === 'login' ? (
             <>Pas encore de compte ?{' '}
               <button onClick={() => setMode('signup')} className="text-blue-600 underline">S&apos;inscrire</button>

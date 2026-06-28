@@ -54,8 +54,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full">
-        <h1 className="text-2xl font-bold text-center mb-2">Mot de passe oublié</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">Reçois un lien pour réinitialiser ton mot de passe.</p>
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">Mot de passe oublié</h1>
+        <p className="text-sm text-gray-600 text-center mb-6">Reçois un lien pour réinitialiser ton mot de passe.</p>
 
         {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
 

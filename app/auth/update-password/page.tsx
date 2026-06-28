@@ -68,8 +68,8 @@ export default function UpdatePasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full">
-        <h1 className="text-2xl font-bold text-center mb-2">Nouveau mot de passe</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">Choisis un nouveau mot de passe pour ton compte.</p>
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">Nouveau mot de passe</h1>
+        <p className="text-sm text-gray-600 text-center mb-6">Choisis un nouveau mot de passe pour ton compte.</p>
 
         {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
         {message && <p className="text-green-600 text-sm mb-4 text-center">{message}</p>}
