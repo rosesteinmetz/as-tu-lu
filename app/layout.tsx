@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import Nav from "@/components/Nav";
 import AuthHandler from "@/components/AuthHandler";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default function RootLayout({
         <AuthHandler />
         <Nav />
         <main className="flex-1">{children}</main>
+        <Analytics />
         <footer className="bg-white border-t border-gray-200 py-6 px-4">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
             <p>&copy; {new Date().getFullYear()} As-tu-lu.fr</p>
