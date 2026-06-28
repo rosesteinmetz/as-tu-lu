@@ -11,7 +11,7 @@ export default function DashboardAuteur() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [titre, setTitre] = useState('');
-  const [auteur, setAuteur] = useState('Céline Autrice');
+  const [auteur, setAuteur] = useState('');
   const [description, setDescription] = useState('');
   const [genre, setGenre] = useState('Romance');
   const [isFree, setIsFree] = useState(true);
@@ -149,7 +149,7 @@ export default function DashboardAuteur() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'auteur</label>
-            <input type="text" value={auteur} onChange={(e) => setAuteur(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" required />
+            <input type="text" value={auteur} onChange={(e) => setAuteur(e.target.value)} placeholder="Nom d'auteur" className="w-full border p-2.5 rounded-lg text-sm" required />
           </div>
 
           <div>
