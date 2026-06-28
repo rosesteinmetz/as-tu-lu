@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
-import { compressImage, MAX_IMAGE_SIZE } from '@/lib/compress';
+import { compressImage, MAX_IMAGE_SIZE, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 
 type Book = { id: string; title: string; author: string; genre: string; cover_url: string | null };
 
@@ -58,7 +58,7 @@ export default function DashboardAuteur() {
         setLoading(false);
         return;
       }
-      formData.append('cover', await compressImage(cover, { maxSizeMB: 1, maxWidthOrHeight: 1200 }));
+      formData.append('cover', await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION }));
     }
     if (epub) formData.append('epub', epub);
     if (pdf) formData.append('pdf', pdf);

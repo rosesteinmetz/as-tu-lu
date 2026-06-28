@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
-import { compressImage, MAX_IMAGE_SIZE } from '@/lib/compress';
+import { compressImage, MAX_IMAGE_SIZE, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 import Link from 'next/link';
 
 export default function EditProfilePage() {
@@ -42,7 +42,7 @@ export default function EditProfilePage() {
     const files = Array.from(e.target.files || []);
     const existingUrls = photos.filter((p): p is string => typeof p === 'string');
     const slotsLeft = 5 - existingUrls.length;
-    const compressed = await Promise.all(files.slice(0, slotsLeft).map((f) => compressImage(f, { maxSizeMB: 1, maxWidthOrHeight: 1200 })));
+    const compressed = await Promise.all(files.slice(0, slotsLeft).map((f) => compressImage(f, { maxWidthOrHeight: IMAGE_MAX_DIMENSION })));
     setPhotos([...existingUrls, ...compressed]);
   };
 
@@ -62,7 +62,7 @@ export default function EditProfilePage() {
     formData.append('tagline', tagline);
     formData.append('bio', bio);
     formData.append('keep_avatar', avatarUrl);
-    if (avatarFile) formData.append('avatar', await compressImage(avatarFile, { maxSizeMB: 0.5, maxWidthOrHeight: 512 }));
+    if (avatarFile) formData.append('avatar', await compressImage(avatarFile, { maxWidthOrHeight: 400 }));
 
     const existingUrls = photos.filter((p): p is string => typeof p === 'string');
     formData.append('keep_photos', JSON.stringify(existingUrls));
