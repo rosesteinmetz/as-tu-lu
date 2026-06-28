@@ -47,6 +47,30 @@ export async function GET(
   return NextResponse.json(book)
 }
 
+async function uploadFile(
+  supabase: any,
+  file: File,
+  prefix: string
+): Promise<string | null> {
+  const ext = file.name.split('.').pop() || 'bin'
+  const fileName = `${prefix}-${Date.now()}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('books')
+    .upload(fileName, file, {
+      contentType: file.type,
+      upsert: false,
+    })
+
+  if (error) return null
+
+  const { data: urlData } = supabase.storage
+    .from('books')
+    .getPublicUrl(fileName)
+
+  return urlData?.publicUrl || null
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -65,13 +89,33 @@ export async function PUT(
   const isFree = formData.get('is_free') === 'true'
   const externalLink = formData.get('external_link') as string
 
+  const updates: Record<string, any> = {
+    title, author, genre, description,
+    is_free: isFree,
+    external_link: isFree ? '' : (externalLink || ''),
+  }
+
+  const coverFile = formData.get('cover') as File | null
+  if (coverFile && coverFile.size > 0 && coverFile.name) {
+    const url = await uploadFile(supabase, coverFile, `cover-${id}`)
+    if (url) updates.cover_url = url
+  }
+
+  const epubFile = formData.get('epub') as File | null
+  if (epubFile && epubFile.size > 0 && epubFile.name) {
+    const url = await uploadFile(supabase, epubFile, `epub-${id}`)
+    if (url) updates.epub_url = url
+  }
+
+  const pdfFile = formData.get('pdf') as File | null
+  if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
+    const url = await uploadFile(supabase, pdfFile, `pdf-${id}`)
+    if (url) updates.pdf_url = url
+  }
+
   const { data, error } = await supabase
     .from('books')
-    .update({
-      title, author, genre, description,
-      is_free: isFree,
-      external_link: isFree ? '' : (externalLink || ''),
-    })
+    .update(updates)
     .eq('id', id)
     .eq('user_id', user.id)
     .select()

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
+import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 import Link from 'next/link';
 
 export default function EditBookPage() {
@@ -13,6 +14,12 @@ export default function EditBookPage() {
   const [description, setDescription] = useState('');
   const [isFree, setIsFree] = useState(true);
   const [externalLink, setExternalLink] = useState('');
+  const [coverUrl, setCoverUrl] = useState('');
+  const [epubUrl, setEpubUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [cover, setCover] = useState<File | null>(null);
+  const [epub, setEpub] = useState<File | null>(null);
+  const [pdf, setPdf] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -27,6 +34,9 @@ export default function EditBookPage() {
         setDescription(data.description || '');
         setIsFree(data.is_free !== false);
         setExternalLink(data.external_link || '');
+        setCoverUrl(data.cover_url || '');
+        setEpubUrl(data.epub_url || '');
+        setPdfUrl(data.pdf_url || '');
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -48,6 +58,9 @@ export default function EditBookPage() {
     formData.append('description', description);
     formData.append('is_free', String(isFree));
     if (externalLink) formData.append('external_link', externalLink);
+    if (cover) formData.append('cover', await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION }));
+    if (epub) formData.append('epub', epub);
+    if (pdf) formData.append('pdf', pdf);
 
     const res = await fetch(`/api/books/${id}`, {
       method: 'PUT',
@@ -171,6 +184,36 @@ export default function EditBookPage() {
             </div>
           )}
         </div>
+
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Couverture</h3>
+          {coverUrl && (
+            <div className="mb-2">
+              <img src={coverUrl} alt="Couverture actuelle" className="w-24 aspect-[210/297] object-contain bg-gray-100 rounded" />
+              <p className="text-xs text-gray-400 mt-1">Couverture actuelle</p>
+            </div>
+          )}
+          <input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] || null)} className="text-sm w-full" />
+        </div>
+
+        {isFree && (
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Fichiers du livre</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Format ePub</label>
+                {epubUrl && <p className="text-xs text-green-600 mb-1">Fichier actuel présent</p>}
+                <input type="file" accept=".epub" onChange={(e) => setEpub(e.target.files?.[0] || null)} className="text-xs w-full" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Format PDF</label>
+                {pdfUrl && <p className="text-xs text-green-600 mb-1">Fichier actuel présent</p>}
+                <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Kindle (MOBI) n'est plus requis — Amazon accepte l'ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button type="submit" disabled={saving} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
