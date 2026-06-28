@@ -1,8 +1,8 @@
 export default function FAQPage() {
   const faqs = [
     {
-      q: "Qu'est-ce qu'As-tu-lu ?",
-      a: "As-tu-lu est une plateforme qui permet aux auteurs francophones de distribuer gratuitement leurs ebooks (ePub, PDF, Kindle) en échange de l'inscription du lecteur à leur newsletter. C'est une alternative française à BookFunnel.",
+      q: "Qu'est-ce qu'As-tu lu ?",
+      a: "As-tu lu est une plateforme qui permet aux auteurs francophones de distribuer gratuitement leurs ebooks (ePub, PDF, Kindle) en échange de l'inscription du lecteur à leur newsletter. C'est une alternative française à BookFunnel.",
     },
     {
       q: "Comment créer un compte auteur ?",
@@ -62,7 +62,7 @@ export default function FAQPage() {
     },
     {
       q: "Puis-je personnaliser les emails Brevo ?",
-      a: "Oui, connecte-toi à ton compte Brevo et personnalise les templates de tes campagnes. L'email de confirmation d'inscription est géré par Brevo, pas par As-tu-lu.",
+      a: "Oui, connecte-toi à ton compte Brevo et personnalise les templates de tes campagnes. L'email de confirmation d'inscription est géré par Brevo, pas par As-tu lu.",
     },
     {
       q: "Y a-t-il une limite de téléchargements ?",
@@ -78,7 +78,7 @@ export default function FAQPage() {
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">FAQ</h1>
-        <p className="text-gray-500 text-sm mb-8">Questions fréquentes sur As-tu-lu</p>
+        <p className="text-gray-500 text-sm mb-8">Questions fréquentes sur As-tu lu</p>
 
         <div className="space-y-3">
           {faqs.map((faq, i) => (

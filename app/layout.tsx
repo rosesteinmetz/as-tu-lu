@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "As-tu-lu - Distribution d'ebooks pour auteurs",
+  title: "As-tu lu - Distribution d'ebooks pour auteurs",
   description: "Plateforme francophone de distribution d'ebooks gratuits en échange d'une inscription à la newsletter de l'auteur.",
 };
 

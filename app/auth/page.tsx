@@ -43,8 +43,8 @@ export default function AuthPage() {
         {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input name="email" type="email" placeholder="Email" className="border p-3 rounded-lg text-sm" required />
-          <input name="password" type="password" placeholder="Mot de passe" className="border p-3 rounded-lg text-sm" required minLength={6} />
+          <input name="email" type="email" placeholder="Email" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required />
+          <input name="password" type="password" placeholder="Mot de passe" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required minLength={6} />
           <button type="submit" disabled={submitting} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
             {submitting ? 'Connexion...' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
           </button>

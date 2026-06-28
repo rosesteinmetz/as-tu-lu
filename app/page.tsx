@@ -37,20 +37,15 @@ export default async function Home() {
     <main className="min-h-screen flex flex-col items-center bg-gray-50 p-6">
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          As-tu-lu ?
+          As-tu lu ?
         </h1>
         <p className="text-xl text-gray-600 mb-8 text-center max-w-2xl">
           Le point de rencontre entre lecteurs passionnés et auteurs francophones.
         </p>
         <div className="flex gap-4 justify-center">
-          <Link href="/dashboard" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            Espace Auteur
+          <Link href="/auth" className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-base font-semibold shadow-md">
+            Connexion Auteur
           </Link>
-          {books.length > 0 && (
-            <Link href={`/book/${books[0].id}`} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
-              Voir comment ça marche
-            </Link>
-          )}
         </div>
       </div>
 
