@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
   if (userId) query = query.eq('user_id', userId)
 
-  const { data: books, error } = await query.order('created_at', { ascending: false })
+  const { data: books, error } = await query.order('sort_order', { ascending: true })
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -123,6 +123,16 @@ export async function POST(request: Request) {
       pdf_url = await uploadFile(pdfFile, 'pdf')
     }
 
+    const { data: maxOrder } = await supabase
+      .from('books')
+      .select('sort_order')
+      .eq('user_id', user.id)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const nextOrder = (maxOrder?.sort_order ?? 0) + 1
+
     const { data: book, error } = await supabase
       .from('books')
       .insert({
@@ -130,6 +140,7 @@ export async function POST(request: Request) {
         cover_url, epub_url, pdf_url,
         is_free: isFree,
         external_link: isFree ? '' : (externalLink || ''),
+        sort_order: nextOrder,
         user_id: user.id,
       })
       .select()

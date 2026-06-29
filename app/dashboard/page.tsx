@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { compressImage, MAX_IMAGE_SIZE, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 
-type Book = { id: string; title: string; author: string; genre: string; cover_url: string | null };
+type Book = { id: string; title: string; author: string; genre: string; cover_url: string | null; sort_order: number };
 
 export default function DashboardAuteur() {
   const router = useRouter();
@@ -34,6 +34,24 @@ export default function DashboardAuteur() {
   }, []);
   const [message, setMessage] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const handleReorder = async (bookId: string, direction: 'up' | 'down') => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    const res = await fetch(`/api/books/${bookId}/reorder`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ direction }),
+    });
+
+    if (res.ok) {
+      const userId = session?.user?.id;
+      const data = await fetch(`/api/books${userId ? `?user_id=${userId}` : ''}`).then(r => r.json());
+      if (Array.isArray(data)) setBooks(data);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,9 +134,25 @@ export default function DashboardAuteur() {
           <p className="text-sm text-gray-500">Aucun livre pour le moment.</p>
         ) : (
           <div className="space-y-2">
-            {books.map((book) => (
+            {books.map((book, idx) => (
               <div key={book.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleReorder(book.id, 'up')}
+                      disabled={idx === 0}
+                      className="text-xs leading-none text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Monter"
+                    >▲</button>
+                    <button
+                      type="button"
+                      onClick={() => handleReorder(book.id, 'down')}
+                      disabled={idx === books.length - 1}
+                      className="text-xs leading-none text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Descendre"
+                    >▼</button>
+                  </div>
                   {book.cover_url ? (
                     <img src={book.cover_url} alt={book.title} className="w-10 h-14 object-cover rounded" />
                   ) : (

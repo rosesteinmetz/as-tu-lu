@@ -13,6 +13,7 @@ CREATE TABLE books (
   download_count INTEGER DEFAULT 0,
   is_free BOOLEAN DEFAULT true,
   external_link TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

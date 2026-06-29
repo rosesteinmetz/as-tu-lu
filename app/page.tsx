@@ -14,7 +14,7 @@ async function getBooks() {
   const { data } = await supabase
     .from('books')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('sort_order', { ascending: true });
 
   return data || [];
 }

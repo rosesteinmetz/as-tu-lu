@@ -11,7 +11,7 @@ const supabase = createServerClient(
 async function getData(userId: string) {
   const [{ data: profile }, { data: books }] = await Promise.all([
     supabase.from('author_profiles').select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from('books').select('id, title, genre, cover_url, description, is_free, external_link').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('books').select('id, title, genre, cover_url, description, is_free, external_link').eq('user_id', userId).order('sort_order', { ascending: true }),
   ]);
   return { profile, books: books || [] };
 }
