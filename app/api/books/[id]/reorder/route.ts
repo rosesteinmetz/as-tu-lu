@@ -36,48 +36,34 @@ export async function POST(
     return NextResponse.json({ error: 'Direction invalide' }, { status: 400 })
   }
 
-  // get current book
-  const { data: current } = await supabase
+  // get all books for this user sorted
+  const { data: allBooks } = await supabase
     .from('books')
-    .select('id, user_id, sort_order')
-    .eq('id', id)
-    .single()
+    .select('id, sort_order, created_at')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
 
-  if (!current || current.user_id !== user.id) {
+  if (!allBooks || allBooks.length < 2) {
+    return NextResponse.json({ error: 'Pas assez de livres' }, { status: 400 })
+  }
+
+  const idx = allBooks.findIndex((b) => b.id === id)
+  if (idx === -1) {
     return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
   }
 
-  // find the neighbor
-  const operator = direction === 'up' ? 'lt' : 'gt'
-  const orderDir = direction === 'up' ? 'desc' : 'asc'
-
-  const { data: neighbor } = await supabase
-    .from('books')
-    .select('id, sort_order')
-    .eq('user_id', user.id)
-    .filter('sort_order', operator, current.sort_order)
-    .order('sort_order', { ascending: orderDir === 'asc' })
-    .limit(1)
-    .maybeSingle()
-
-  if (!neighbor) {
+  const neighborIdx = direction === 'up' ? idx - 1 : idx + 1
+  if (neighborIdx < 0 || neighborIdx >= allBooks.length) {
     return NextResponse.json({ error: 'Déjà en limite' }, { status: 400 })
   }
 
+  const current = allBooks[idx]
+  const neighbor = allBooks[neighborIdx]
+
   // swap sort_order
-  const { error: err1 } = await supabase
-    .from('books')
-    .update({ sort_order: neighbor.sort_order })
-    .eq('id', current.id)
-
-  const { error: err2 } = await supabase
-    .from('books')
-    .update({ sort_order: current.sort_order })
-    .eq('id', neighbor.id)
-
-  if (err1 || err2) {
-    return NextResponse.json({ error: 'Erreur lors du réordonnancement' }, { status: 500 })
-  }
+  await supabase.from('books').update({ sort_order: neighbor.sort_order }).eq('id', current.id)
+  await supabase.from('books').update({ sort_order: current.sort_order }).eq('id', neighbor.id)
 
   return NextResponse.json({ success: true })
 }
