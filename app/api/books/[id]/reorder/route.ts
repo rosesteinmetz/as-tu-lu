@@ -39,7 +39,7 @@ export async function POST(
   // get all books for this user sorted
   const { data: allBooks } = await supabase
     .from('books')
-    .select('id, sort_order, created_at')
+    .select('id')
     .eq('user_id', user.id)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
@@ -58,12 +58,16 @@ export async function POST(
     return NextResponse.json({ error: 'Déjà en limite' }, { status: 400 })
   }
 
-  const current = allBooks[idx]
-  const neighbor = allBooks[neighborIdx]
+  // swap positions in the array
+  const reordered = [...allBooks]
+  ;[reordered[idx], reordered[neighborIdx]] = [reordered[neighborIdx], reordered[idx]]
 
-  // swap sort_order
-  await supabase.from('books').update({ sort_order: neighbor.sort_order }).eq('id', current.id)
-  await supabase.from('books').update({ sort_order: current.sort_order }).eq('id', neighbor.id)
+  // reassign sequential sort_order values
+  const updates = reordered.map((book, i) =>
+    supabase.from('books').update({ sort_order: i + 1 }).eq('id', book.id)
+  )
+
+  await Promise.all(updates)
 
   return NextResponse.json({ success: true })
 }
