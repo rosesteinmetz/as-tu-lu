@@ -88,7 +88,11 @@ export default function DashboardAuteur() {
 
       setMessage(`Livre "${titre}" publié avec succès !`);
       setTitre('');
+      setAuteur('');
       setDescription('');
+      setGenre('Romance');
+      setIsFree(true);
+      setExternalLink('');
       setCover(null);
       setEpub(null);
       setPdf(null);
