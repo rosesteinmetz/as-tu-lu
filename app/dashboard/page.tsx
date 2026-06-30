@@ -21,6 +21,7 @@ export default function DashboardAuteur() {
   const [pdf, setPdf] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingBooks, setLoadingBooks] = useState(true);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -98,6 +99,7 @@ export default function DashboardAuteur() {
       setPdf(null);
       setAcceptedTerms(false);
       router.refresh();
+      setFormKey((k) => k + 1);
     } catch (err) {
       setMessage(`Erreur : ${(err as Error).message}`);
     } finally {
@@ -174,7 +176,7 @@ export default function DashboardAuteur() {
       <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
         <h2 className="text-xl font-semibold mb-6 text-gray-800">Ajouter un nouvel Ebook</h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form key={formKey} onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Titre du livre</label>
             <input type="text" value={titre} onChange={(e) => setTitre(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" required />
