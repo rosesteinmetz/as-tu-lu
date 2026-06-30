@@ -28,7 +28,7 @@ export default function EditProfilePage() {
     apiFetch('/api/profile')
       .then((r) => r.json())
       .then((data) => {
-        setName(data.name || 'Céline Autrice');
+        setName(data.name || '');
         setTagline(data.tagline || '');
         setBio(data.bio || '');
         setAvatarUrl(data.avatar_url || '');
@@ -95,8 +95,8 @@ export default function EditProfilePage() {
 
       <form onSubmit={handleSave} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'autrice</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'auteur</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom d'auteur" className="w-full border p-2.5 rounded-lg text-sm" />
         </div>
 
         <div>
