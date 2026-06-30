@@ -90,7 +90,7 @@ export default function DashboardAuteur() {
         if (!res.ok) errorMsg = data.error || errorMsg
       } catch {
         if (!res.ok && res.status === 413) {
-          errorMsg = "Le fichier est trop volumineux pour le serveur (limite ~4.5 Mo). Réduis la taille du fichier EPUB ou PDF."
+          errorMsg = "Le fichier est trop volumineux pour le serveur (limite ~4.5 Mo). Voir la FAQ 'Comment réduire la taille de mes fichiers EPUB/PDF ?' pour des solutions."
         } else {
           const text = await res.text().catch(() => errorMsg)
           errorMsg = text || errorMsg
