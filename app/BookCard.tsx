@@ -54,7 +54,7 @@ export default function BookCard({ book }: { book: Book }) {
         {book.is_free !== false ? (
           <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
         ) : (
-          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">Disponible à l&apos;achat</span>
+          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs">EN VENTE</span>
         )}
       </div>
       {book.is_free !== false && (

@@ -81,7 +81,7 @@ export default function BookPageClient({ book }: { book: Book }) {
             </span>
             {isPaid ? (
               <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
-                Disponible à l'achat
+                EN VENTE
               </span>
             ) : (
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
