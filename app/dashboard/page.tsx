@@ -83,9 +83,21 @@ export default function DashboardAuteur() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
         body: formData,
       });
-      const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error);
+      let errorMsg = "Erreur inconnue"
+      try {
+        const data = await res.json()
+        if (!res.ok) errorMsg = data.error || errorMsg
+      } catch {
+        if (!res.ok && res.status === 413) {
+          errorMsg = "Le fichier est trop volumineux pour le serveur (limite ~4.5 Mo). Réduis la taille du fichier EPUB ou PDF."
+        } else {
+          const text = await res.text().catch(() => errorMsg)
+          errorMsg = text || errorMsg
+        }
+      }
+
+      if (!res.ok) throw new Error(errorMsg)
 
       setMessage(`Livre "${titre}" publié avec succès !`);
       setTitre('');
