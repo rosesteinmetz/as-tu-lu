@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
-import { compressImage, MAX_IMAGE_SIZE, IMAGE_MAX_DIMENSION } from '@/lib/compress';
+import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 import Link from 'next/link';
 
 export default function EditProfilePage() {

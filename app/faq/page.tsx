@@ -18,7 +18,7 @@ export default function FAQPage() {
     },
     {
       q: "Quels formats d'ebook sont acceptés ?",
-      a: "Tu peux proposer tes livres aux formats ePub et PDF. Le format Kindle (MOBI) n'est plus utilisé — Amazon accepte désormais l'ePub directement via Send to Kindle. Chaque fichier est limité à 50 Mo. Toutes les images (couverture, avatar, galerie) sont limitées à 5 Mo et automatiquement compressées.",
+      a: "Tu peux proposer tes livres aux formats ePub et PDF. Le format Kindle (MOBI) n'est plus utilisé — Amazon accepte désormais l'ePub directement via Send to Kindle. Chaque fichier est limité à 50 Mo.",
     },
     {
       q: "Comment les lecteurs téléchargent-ils mes livres ?",

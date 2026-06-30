@@ -2,7 +2,6 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 async function createClient(request: Request) {
@@ -80,9 +79,6 @@ export async function POST(request: Request) {
   const epubFile = formData.get('epub') as File | null
   const pdfFile = formData.get('pdf') as File | null
 
-  if (coverFile && coverFile.size > MAX_IMAGE_SIZE) {
-    return NextResponse.json({ error: `L'image de couverture dépasse 5 Mo.` }, { status: 400 })
-  }
   for (const f of [epubFile, pdfFile]) {
     if (f && f.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: `Un des fichiers dépasse 50 Mo.` }, { status: 400 })

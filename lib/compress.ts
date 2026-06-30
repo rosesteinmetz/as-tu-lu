@@ -74,6 +74,6 @@ export async function compressImage(file: File, options: CompressOptions = {}): 
   }
 }
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
-export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+export const MAX_FILE_SIZE = 50 * 1024 * 1024;
+export const MAX_IMAGE_SIZE = 100 * 1024 * 1024;
 export const IMAGE_MAX_DIMENSION = 800;

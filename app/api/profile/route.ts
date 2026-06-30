@@ -1,8 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024
-
 async function createClient(request: Request) {
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
@@ -57,15 +55,6 @@ export async function POST(request: Request) {
   const avatarFile = formData.get('avatar') as File | null
   const photos = formData.getAll('photos') as File[]
   const keepPhotos = formData.get('keep_photos') as string || '[]'
-
-  if (avatarFile && avatarFile.size > MAX_IMAGE_SIZE) {
-    return NextResponse.json({ error: `La photo de profil dépasse 5 Mo.` }, { status: 400 })
-  }
-  for (const photo of photos) {
-    if (photo.size > MAX_IMAGE_SIZE) {
-      return NextResponse.json({ error: `Une des photos de l'univers dépasse 5 Mo.` }, { status: 400 })
-    }
-  }
 
   let existingPhotos: string[] = []
   try { existingPhotos = JSON.parse(keepPhotos) } catch {}

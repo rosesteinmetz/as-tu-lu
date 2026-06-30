@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
-import { compressImage, MAX_IMAGE_SIZE, IMAGE_MAX_DIMENSION } from '@/lib/compress';
+import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 
 type Book = { id: string; title: string; author: string; genre: string; cover_url: string | null; sort_order: number };
 
@@ -71,11 +71,6 @@ export default function DashboardAuteur() {
     formData.append('is_free', String(isFree));
     if (externalLink) formData.append('external_link', externalLink);
     if (cover) {
-      if (cover.size > MAX_IMAGE_SIZE) {
-        setMessage(`Erreur : L'image de couverture dépasse 5 Mo.`);
-        setLoading(false);
-        return;
-      }
       formData.append('cover', await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION }));
     }
     if (epub) formData.append('epub', epub);
