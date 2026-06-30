@@ -22,7 +22,7 @@ export default function FAQPage() {
     },
     {
       q: "Comment réduire la taille de mes fichiers EPUB/PDF ?",
-      a: "Pour l'EPUB : utilise Calibre (gratuit) pour le convertir avec une qualité d'image réduite (Préférences → Conversion → Options → Images). Tu peux aussi dézipper le fichier .epub, remplacer les images par des versions allégées, puis rezipper en .epub. Pour le PDF : utilise un outil comme ilovepdf.com, smallpdf.com, ou dans Acrobat « Fichier → Enregistrer sous → PDF réduit ». Évite d'intégrer des polices complètes ou des images en 300 DPI si le livre est numérique.",
+      a: "Pour reduire un EPUB : utilise Calibre (Preferences > Conversion > Options > Images) pour abaisser la qualite des images. Tu peux aussi dezipper le fichier .epub, remplacer les images volumineuses, puis rezipper en .epub. Pour le PDF : utilise un outil comme ilovepdf.com, smallpdf.com, ou dans Acrobat choisis Fichier > Enregistrer sous > PDF reduit. Evite les images en 300 DPI et les polices embarquees pour un livre numerique.",
     },
     {
       q: "Comment les lecteurs téléchargent-ils mes livres ?",
