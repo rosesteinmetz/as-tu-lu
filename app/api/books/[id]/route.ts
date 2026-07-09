@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { slugify, ensureUniqueSlug } from '@/lib/slug'
 
 async function createClient(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -111,6 +112,12 @@ export async function PUT(
   if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
     const url = await uploadFile(supabase, pdfFile, `pdf-${id}`)
     if (url) updates.pdf_url = url
+  }
+
+  // regen slug if title changed
+  if (title) {
+    const baseSlug = slugify(title)
+    updates.slug = await ensureUniqueSlug(supabase, 'books', baseSlug, id)
   }
 
   const { data, error } = await supabase

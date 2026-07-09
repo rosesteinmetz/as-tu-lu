@@ -8,11 +8,34 @@ const supabase = createServerClient(
   { cookies: { getAll() { return [] }, setAll() {} } }
 );
 
-async function getData(userId: string) {
-  const [{ data: profile }, { data: books }] = await Promise.all([
-    supabase.from('author_profiles').select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from('books').select('id, title, genre, cover_url, description, is_free, external_link').eq('user_id', userId).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+async function getProfile(slugOrId: string) {
+  // try slug first, then UUID
+  let { data } = await supabase
+    .from('author_profiles')
+    .select('*')
+    .eq('slug', slugOrId)
+    .maybeSingle()
+
+  if (!data) {
+    const result = await supabase
+      .from('author_profiles')
+      .select('*')
+      .eq('user_id', slugOrId)
+      .maybeSingle()
+    data = result.data
+  }
+
+  return data
+}
+
+async function getData(slugOrId: string) {
+  const profile = await getProfile(slugOrId);
+  if (!profile) return { profile: null, books: [] };
+
+  const [{ data: books }] = await Promise.all([
+    supabase.from('books').select('id, title, genre, cover_url, description, is_free, external_link, slug').eq('user_id', profile.user_id).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
   ]);
+
   return { profile, books: books || [] };
 }
 
@@ -77,9 +100,10 @@ export default async function AuteurIndividuelPage({ params }: { params: Promise
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {books.map((book) => {
+              const bookHref = book.slug ? `/livre/${book.slug}` : `/book/${book.id}`;
               const BookLink = book.external_link && book.is_free === false
                 ? ({ children, ...props }: any) => <a href={book.external_link!} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
-                : ({ children, ...props }: any) => <Link href={`/book/${book.id}`} {...props}>{children}</Link>;
+                : ({ children, ...props }: any) => <Link href={bookHref} {...props}>{children}</Link>;
 
               return (
                 <BookLink key={book.id} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4">

@@ -14,6 +14,7 @@ CREATE TABLE books (
   is_free BOOLEAN DEFAULT true,
   external_link TEXT DEFAULT '',
   sort_order INTEGER DEFAULT 0,
+  slug TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -68,6 +69,7 @@ CREATE TABLE author_profiles (
   avatar_url TEXT DEFAULT '',
   bio TEXT DEFAULT '',
   photo_urls TEXT[] DEFAULT '{}',
+  slug TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

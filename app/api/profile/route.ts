@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { slugify, ensureUniqueSlug } from '@/lib/slug'
 
 async function createClient(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -90,7 +91,10 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const payload = { user_id: user.id, name, tagline, avatar_url, bio, photo_urls: allPhotos }
+  const payload: Record<string, any> = { user_id: user.id, name, tagline, avatar_url, bio, photo_urls: allPhotos }
+
+  const baseSlug = slugify(name || 'auteur')
+  payload.slug = await ensureUniqueSlug(supabase, 'author_profiles', baseSlug, existing?.id)
 
   let error
   if (existing) {

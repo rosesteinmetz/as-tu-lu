@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 type Book = {
   id: string
+  slug?: string | null
   title: string
   author: string
   genre: string
@@ -80,7 +81,7 @@ export default function BookCard({ book }: { book: Book }) {
 
   return (
     <Link
-      href={`/book/${book.id}`}
+      href={`/livre/${book.slug || book.id}`}
       className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 block"
     >
       <CardContent />

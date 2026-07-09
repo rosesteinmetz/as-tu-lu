@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { slugify, ensureUniqueSlug } from '@/lib/slug'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 
@@ -128,6 +129,8 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     const nextOrder = (maxOrder?.sort_order ?? 0) + 1
+    const baseSlug = slugify(title)
+    const slug = await ensureUniqueSlug(supabase, 'books', baseSlug)
 
     const { data: book, error } = await supabase
       .from('books')
@@ -137,6 +140,7 @@ export async function POST(request: Request) {
         is_free: isFree,
         external_link: isFree ? '' : (externalLink || ''),
         sort_order: nextOrder,
+        slug,
         user_id: user.id,
       })
       .select()

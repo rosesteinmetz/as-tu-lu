@@ -44,7 +44,7 @@ export default async function AuteurListPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {profiles.map((profile) => (
-              <Link key={profile.id} href={`/auteur/${profile.user_id}`} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 text-center">
+              <Link key={profile.id} href={`/auteur/${profile.slug || profile.user_id}`} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 text-center">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.name} className="w-20 h-20 rounded-full mx-auto mb-4 object-cover" />
                 ) : (
