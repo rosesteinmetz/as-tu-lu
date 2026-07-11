@@ -28,10 +28,9 @@ CREATE TABLE subscribers (
   consent_date TIMESTAMPTZ DEFAULT now(),
   ip_address TEXT DEFAULT '',
   terms_version TEXT DEFAULT '1.0',
+  download_token TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
-
--- Index pour éviter les doublons (même email pour un même livre)
 CREATE UNIQUE INDEX idx_subscribers_email_book ON subscribers(email, book_id);
 
 -- Fonction pour incrémenter le compteur de téléchargements (bypass RLS)
@@ -94,8 +93,8 @@ CREATE TABLE newsletter_settings (
 );
 
 ALTER TABLE newsletter_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Lecture publique paramètres" ON newsletter_settings
-  FOR SELECT USING (true);
+CREATE POLICY "Lecture paramètres par propriétaire" ON newsletter_settings
+  FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Insertion paramètres par propriétaire" ON newsletter_settings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Modification paramètres par propriétaire" ON newsletter_settings
@@ -106,6 +105,10 @@ ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Tout le monde peut s'inscrire" ON subscribers
   FOR INSERT WITH CHECK (true);
 
--- Politique de sécurité : lecture par utilisateur connecté
-CREATE POLICY "Lecture des abonnés par utilisateur connecté" ON subscribers
-  FOR SELECT USING (auth.role() = 'authenticated');
+-- Politique de sécurité : lecture des abonnés par propriétaire du livre
+CREATE POLICY "Lecture des abonnés par propriétaire" ON subscribers
+  FOR SELECT USING (
+    auth.uid() IN (
+      SELECT user_id FROM books WHERE id = book_id
+    )
+  );

@@ -58,7 +58,8 @@ export default function BookPageClient({ book }: { book: Book }) {
     }
 
     const errs = data.newsletter_errors ? encodeURIComponent(JSON.stringify(data.newsletter_errors)) : ''
-    router.push(`/book/${book.id}/confirmation${errs ? `?errors=${errs}` : ''}`)
+    const tokenParam = data.download_token ? `&token=${data.download_token}` : ''
+    router.push(`/book/${book.id}/confirmation?${errs ? `errors=${errs}${tokenParam}` : `token=${data.download_token || ''}`}`)
   }
 
   return (

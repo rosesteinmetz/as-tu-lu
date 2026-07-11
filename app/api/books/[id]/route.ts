@@ -37,7 +37,7 @@ export async function GET(
 
   const { data: book, error } = await anonClient
     .from('books')
-    .select('*')
+    .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link, slug')
     .eq('id', id)
     .single()
 

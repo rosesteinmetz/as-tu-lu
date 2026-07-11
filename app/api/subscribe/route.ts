@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { forwardToNewsletter } from '@/lib/newsletter'
 import { checkRateLimit } from '@/lib/rate-limit'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
   const supabase = createServerClient(
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     || request.headers.get('x-real-ip')
     || ''
 
+  const downloadToken = crypto.randomUUID()
+
   if (!checkRateLimit(ip_address || 'unknown', 5, 60000)) {
     return NextResponse.json({ error: 'Trop de tentatives. Réessaie dans une minute.' }, { status: 429 })
   }
@@ -34,6 +37,7 @@ export async function POST(request: Request) {
       consent_date: new Date().toISOString(),
       ip_address,
       terms_version: terms_version || '1.0',
+      download_token: downloadToken,
     })
 
   if (insertError) {
@@ -82,6 +86,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
+    download_token: downloadToken,
     newsletter_errors: newsletterErrors.length > 0 ? newsletterErrors : undefined,
   }, { status: 201 })
 }

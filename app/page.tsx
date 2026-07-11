@@ -13,7 +13,7 @@ async function getBooks() {
 
   const { data } = await supabase
     .from('books')
-    .select('*')
+    .select('id, title, author, genre, cover_url, user_id, download_count, is_free, external_link, slug')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true });
 
