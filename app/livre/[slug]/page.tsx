@@ -2,8 +2,6 @@ import { createServerClient } from '@supabase/ssr'
 import { notFound, redirect } from 'next/navigation'
 import BookPageClient from '@/app/book/[id]/BookPageClient'
 
-export const revalidate = 60
-
 async function getBook(slug: string) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

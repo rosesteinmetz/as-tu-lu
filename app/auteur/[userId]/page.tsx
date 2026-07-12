@@ -2,8 +2,6 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { notFound } from 'next/navigation';
 
-export const revalidate = 60
-
 function getClient() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
