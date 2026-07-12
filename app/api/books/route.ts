@@ -37,12 +37,12 @@ async function createClient(request: Request) {
   return supabase
 }
 
-const publicClient = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export async function GET(request: Request) {
+  const publicClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get('user_id')
 
