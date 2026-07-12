@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import BookGrid from './BookGrid';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 async function getBooks() {
   const supabase = createServerClient(
