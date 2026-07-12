@@ -51,13 +51,14 @@ export async function GET(
 async function uploadFile(
   supabase: any,
   file: File,
+  bucket: string,
   prefix: string
 ): Promise<string | null> {
   const ext = file.name.split('.').pop() || 'bin'
   const fileName = `${prefix}-${Date.now()}.${ext}`
 
   const { error } = await supabase.storage
-    .from('books')
+    .from(bucket)
     .upload(fileName, file, {
       contentType: file.type,
       upsert: false,
@@ -66,7 +67,7 @@ async function uploadFile(
   if (error) return null
 
   const { data: urlData } = supabase.storage
-    .from('books')
+    .from(bucket)
     .getPublicUrl(fileName)
 
   return urlData?.publicUrl || null
@@ -98,19 +99,19 @@ export async function PUT(
 
   const coverFile = formData.get('cover') as File | null
   if (coverFile && coverFile.size > 0 && coverFile.name) {
-    const url = await uploadFile(supabase, coverFile, `cover-${id}`)
+    const url = await uploadFile(supabase, coverFile, 'images', `cover-${id}`)
     if (url) updates.cover_url = url
   }
 
   const epubFile = formData.get('epub') as File | null
   if (epubFile && epubFile.size > 0 && epubFile.name) {
-    const url = await uploadFile(supabase, epubFile, `epub-${id}`)
+    const url = await uploadFile(supabase, epubFile, 'books', `epub-${id}`)
     if (url) updates.epub_url = url
   }
 
   const pdfFile = formData.get('pdf') as File | null
   if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
-    const url = await uploadFile(supabase, pdfFile, `pdf-${id}`)
+    const url = await uploadFile(supabase, pdfFile, 'books', `pdf-${id}`)
     if (url) updates.pdf_url = url
   }
 

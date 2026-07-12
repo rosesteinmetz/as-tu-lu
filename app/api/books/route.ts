@@ -93,17 +93,17 @@ export async function POST(request: Request) {
   const slug = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase()
   const baseName = `${slug(title)}_${slug(author)}`
 
-  const uploadFile = async (file: File, folder: string) => {
+  const uploadFile = async (file: File, bucket: string, folder: string) => {
     const ext = file.name.split('.').pop()
     const fileName = `${folder}/${baseName}.${ext}`
     const { error } = await supabase.storage
-      .from('books')
+      .from(bucket)
       .upload(fileName, file)
 
     if (error) throw new Error(error.message)
 
     const { data: { publicUrl } } = supabase.storage
-      .from('books')
+      .from(bucket)
       .getPublicUrl(fileName)
 
     return publicUrl
@@ -111,13 +111,13 @@ export async function POST(request: Request) {
 
   try {
     if (coverFile && coverFile.size > 0) {
-      cover_url = await uploadFile(coverFile, 'covers')
+      cover_url = await uploadFile(coverFile, 'images', 'covers')
     }
     if (epubFile && epubFile.size > 0) {
-      epub_url = await uploadFile(epubFile, 'epub')
+      epub_url = await uploadFile(epubFile, 'books', 'epub')
     }
     if (pdfFile && pdfFile.size > 0) {
-      pdf_url = await uploadFile(pdfFile, 'pdf')
+      pdf_url = await uploadFile(pdfFile, 'books', 'pdf')
     }
 
     const { data: maxOrder } = await supabase

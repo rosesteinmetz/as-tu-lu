@@ -66,9 +66,9 @@ export async function POST(request: Request) {
     if (photo.size === 0) continue
     const ext = photo.name.split('.').pop()
     const fileName = `author/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage.from('books').upload(fileName, photo)
+    const { error } = await supabase.storage.from('images').upload(fileName, photo)
     if (error) throw new Error(error.message)
-    const { data: { publicUrl } } = supabase.storage.from('books').getPublicUrl(fileName)
+    const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName)
     uploadedUrls.push(publicUrl)
   }
 
@@ -78,9 +78,9 @@ export async function POST(request: Request) {
   if (avatarFile && avatarFile.size > 0) {
     const ext = avatarFile.name.split('.').pop()
     const fileName = `author/avatar-${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('books').upload(fileName, avatarFile)
+    const { error: uploadError } = await supabase.storage.from('images').upload(fileName, avatarFile)
     if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage.from('books').getPublicUrl(fileName)
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName)
       avatar_url = publicUrl
     }
   }
