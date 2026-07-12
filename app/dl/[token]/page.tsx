@@ -24,23 +24,25 @@ async function getDownloadData(token: string) {
 
   if (!book) return null
 
-  const storageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/books/`
-
   const toSigned = async (fileUrl: string | null) => {
     if (!fileUrl) return null
-    const filePath = fileUrl.replace(storageUrl, '')
+    const match = fileUrl.match(/\/object\/public\/([^/]+)\/(.+)/)
+    if (!match) return fileUrl
+    const bucket = match[1]
+    const filePath = match[2]
     const { data } = await supabase.storage
-      .from('books')
+      .from(bucket)
       .createSignedUrl(filePath, 3600)
     return data?.signedUrl || null
   }
 
-  const [epub_url, pdf_url] = await Promise.all([
+  const [epub_url, pdf_url, cover_url] = await Promise.all([
     toSigned(book.epub_url),
     toSigned(book.pdf_url),
+    toSigned(book.cover_url),
   ])
 
-  return { ...book, epub_url, pdf_url }
+  return { ...book, epub_url, pdf_url, cover_url }
 }
 
 function dl(url: string | null | undefined, label: string, ext: string) {

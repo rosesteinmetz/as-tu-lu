@@ -44,14 +44,13 @@ export async function GET(
     return NextResponse.json({ error: 'Livre introuvable' }, { status: 404 })
   }
 
-  const storageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/books/`
-
   const toSigned = async (fileUrl: string | null) => {
     if (!fileUrl) return null
-    const filePath = fileUrl.replace(storageUrl, '')
+    const match = fileUrl.match(/\/object\/public\/([^/]+)\/(.+)/)
+    if (!match) return null
     const { data } = await admin.storage
-      .from('books')
-      .createSignedUrl(filePath, 300)
+      .from(match[1])
+      .createSignedUrl(match[2], 300)
     return data?.signedUrl || null
   }
 
