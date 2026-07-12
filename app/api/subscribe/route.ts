@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
-import { forwardToNewsletter } from '@/lib/newsletter'
+import { forwardToNewsletter, sendDownloadEmail } from '@/lib/newsletter'
 import { checkRateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   const { data: book } = await supabase
     .from('books')
-    .select('title, user_id')
+    .select('title, author, user_id')
     .eq('id', book_id)
     .single()
 
@@ -74,6 +74,17 @@ export async function POST(request: Request) {
       }
     } catch (err) {
       console.error('Newsletter forward error:', err)
+    }
+  }
+
+  // email de récupération
+  if (settings?.api_key && settings?.provider === 'brevo') {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://as-tu-lu.fr'
+    const downloadUrl = `${siteUrl}/dl/${downloadToken}`
+    try {
+      await sendDownloadEmail(email, book?.title || '', book?.author || '', downloadUrl, settings)
+    } catch (err) {
+      console.error('Download email error:', err)
     }
   }
 

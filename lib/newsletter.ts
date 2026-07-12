@@ -6,6 +6,60 @@ type NewsletterConfig = {
   notify_email: string
 }
 
+export async function sendDownloadEmail(
+  email: string,
+  bookTitle: string,
+  bookAuthor: string,
+  downloadUrl: string,
+  config: NewsletterConfig
+) {
+  if (!config.api_key || config.provider !== 'brevo') return
+
+  const siteName = 'As-tu-lu'
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#1f2937;">Merci pour ton inscription !</h2>
+      <p style="color:#4b5563;font-size:15px;line-height:1.5;">
+        Ton livre <strong>"${bookTitle}"</strong> de <strong>${bookAuthor}</strong> est prêt.
+      </p>
+      <a href="${downloadUrl}"
+         style="display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0;">
+        Télécharger mon livre
+      </a>
+      <p style="color:#9ca3af;font-size:13px;">
+        Ce lien est personnel et expirera dans 1 heure. Ne le partage pas.
+      </p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+      <p style="color:#9ca3af;font-size:12px;">
+        Tu as téléchargé ce livre sur ${siteName}.<br>
+        Si tu n'es pas à l'origine de cet email, ignore-le.
+      </p>
+    </div>
+  `
+
+  const senderEmail = config.notify_email || 'noreply@as-tu-lu.fr'
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': config.api_key,
+    },
+    body: JSON.stringify({
+      to: [{ email }],
+      templateId: null,
+      subject: `Ton livre "${bookTitle}" est prêt à être téléchargé`,
+      htmlContent: html,
+      sender: { name: siteName, email: senderEmail },
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Brevo (email) ${response.status}: ${body}`)
+  }
+}
+
 export async function forwardToNewsletter(
   email: string,
   bookTitle: string,
