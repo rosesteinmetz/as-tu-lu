@@ -11,7 +11,7 @@ async function getData() {
   );
 
   const [{ data: profiles }, { data: books }] = await Promise.all([
-    supabase.from('author_profiles').select('name, tagline, avatar_url, slug, user_id').order('name'),
+    supabase.from('author_profiles').select('id, name, tagline, avatar_url, slug, user_id').order('name'),
     supabase.from('books').select('user_id').not('user_id', 'is', null),
   ]);
 
