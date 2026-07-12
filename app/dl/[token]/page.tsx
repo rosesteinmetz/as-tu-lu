@@ -10,11 +10,14 @@ async function getDownloadData(token: string) {
 
   const { data: sub } = await supabase
     .from('subscribers')
-    .select('book_id')
+    .select('book_id, created_at')
     .eq('download_token', token)
     .maybeSingle()
 
   if (!sub) return null
+
+  const MAX_AGE = 30 * 24 * 60 * 60 * 1000
+  if (Date.now() - new Date(sub.created_at).getTime() > MAX_AGE) return null
 
   const { data: book } = await supabase
     .from('books')

@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
 import { validateFile } from '@/lib/file-validator'
@@ -146,6 +147,12 @@ export async function PUT(
   return NextResponse.json({ success: true })
 }
 
+const extractStoragePath = (url: string | null) => {
+  if (!url) return null
+  const match = url.match(/\/object\/(?:public|authenticated)\/([^/]+)\/(.+)/)
+  return match ? { bucket: match[1], path: match[2] } : null
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -155,19 +162,47 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
 
-  const { data, error } = await supabase
+  // fetch book files before deleting
+  const { data: book } = await supabase
+    .from('books')
+    .select('cover_url, epub_url, pdf_url')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!book) {
+    return NextResponse.json({ error: 'Introuvable ou accès refusé.' }, { status: 404 })
+  }
+
+  // delete storage files via admin client (bypasses RLS)
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (serviceRoleKey) {
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey
+    )
+    const paths = [book.cover_url, book.epub_url, book.pdf_url]
+      .map(extractStoragePath)
+      .filter(Boolean) as { bucket: string; path: string }[]
+    const byBucket: Record<string, string[]> = {}
+    for (const { bucket, path } of paths) {
+      (byBucket[bucket] ??= []).push(path)
+    }
+    await Promise.all(
+      Object.entries(byBucket).map(([bucket, files]) =>
+        admin.storage.from(bucket).remove(files)
+      )
+    )
+  }
+
+  const { error } = await supabase
     .from('books')
     .delete()
     .eq('id', id)
     .eq('user_id', user.id)
-    .select()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Introuvable ou accès refusé.' }, { status: 404 })
   }
 
   return NextResponse.json({ success: true })

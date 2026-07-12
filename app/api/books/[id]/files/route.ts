@@ -25,13 +25,18 @@ export async function GET(
 
   const { data: sub } = await admin
     .from('subscribers')
-    .select('id')
+    .select('id, created_at')
     .eq('book_id', id)
     .eq('download_token', token)
     .maybeSingle()
 
   if (!sub) {
     return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+  }
+
+  const MAX_AGE = 30 * 24 * 60 * 60 * 1000
+  if (Date.now() - new Date(sub.created_at).getTime() > MAX_AGE) {
+    return NextResponse.json({ error: 'Token expiré' }, { status: 410 })
   }
 
   const { data: book } = await admin
