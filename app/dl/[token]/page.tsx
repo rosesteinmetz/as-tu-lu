@@ -35,7 +35,7 @@ async function getDownloadData(token: string) {
     const filePath = match[2]
     const { data } = await supabase.storage
       .from(bucket)
-      .createSignedUrl(filePath, 3600)
+      .createSignedUrl(filePath, 604800)
     return data?.signedUrl || null
   }
 

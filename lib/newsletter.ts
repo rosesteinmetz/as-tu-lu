@@ -10,7 +10,8 @@ export async function sendDownloadEmail(
   email: string,
   bookTitle: string,
   bookAuthor: string,
-  downloadUrl: string,
+  downloadLinks: { url: string; label: string }[],
+  recoveryUrl: string,
   config: NewsletterConfig
 ) {
   if (!config.api_key) return
@@ -24,18 +25,23 @@ export async function sendDownloadEmail(
   }
 
   const siteName = 'As-tu-lu'
+  const linksHtml = downloadLinks.map(({ url, label }) =>
+    `<a href="${url}" style="display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:4px;">${label}</a>`
+  ).join(' ')
   const html = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
       <h2 style="color:#1f2937;">Merci pour ton inscription !</h2>
       <p style="color:#4b5563;font-size:15px;line-height:1.5;">
         Ton livre <strong>"${bookTitle}"</strong> de <strong>${bookAuthor}</strong> est prêt.
       </p>
-      <a href="${downloadUrl}"
-         style="display:inline-block;background:#2563eb;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0;">
-        Télécharger mon livre
-      </a>
+      <div style="text-align:center;margin:20px 0;">
+        ${linksHtml}
+      </div>
       <p style="color:#9ca3af;font-size:13px;">
-        Ce lien est personnel et expirera dans 1 heure. Ne le partage pas.
+        Ces liens sont personnels et expirent dans 1 semaine. Ne les partage pas.
+      </p>
+      <p style="color:#9ca3af;font-size:13px;">
+        <a href="${recoveryUrl}" style="color:#2563eb;">Lien de récupération permanent</a>
       </p>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
       <p style="color:#9ca3af;font-size:12px;">

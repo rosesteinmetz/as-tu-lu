@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { forwardToNewsletter, sendDownloadEmail } from '@/lib/newsletter'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -81,12 +82,44 @@ export async function POST(request: Request) {
     }
   }
 
-  // email de récupération
+  // email de récupération avec liens directs
   if (settings?.api_key && settings?.provider === 'brevo') {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://as-tu-lu.fr'
-    const downloadUrl = `${siteUrl}/dl/${downloadToken}`
+    const recoveryUrl = `${siteUrl}/dl/${downloadToken}`
+
+    // générer les liens directs signés (1 semaine)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    let downloadLinks: { url: string; label: string }[] = []
+    if (serviceRoleKey && book) {
+      const admin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey
+      )
+      const { data: bookFiles } = await admin
+        .from('books')
+        .select('epub_url, pdf_url')
+        .eq('id', book_id)
+        .single()
+
+      const toSigned = async (fileUrl: string | null, label: string) => {
+        if (!fileUrl) return null
+        const match = fileUrl.match(/\/object\/public\/([^/]+)\/(.+)/)
+        if (!match) return null
+        const { data } = await admin.storage
+          .from(match[1])
+          .createSignedUrl(match[2], 604800)
+        return data?.signedUrl ? { url: data.signedUrl, label } : null
+      }
+
+      const results = await Promise.all([
+        toSigned(bookFiles?.epub_url || null, 'Télécharger ePub'),
+        toSigned(bookFiles?.pdf_url || null, 'Télécharger PDF'),
+      ])
+      downloadLinks = results.filter(Boolean) as { url: string; label: string }[]
+    }
+
     try {
-      await sendDownloadEmail(email, book?.title || '', book?.author || '', downloadUrl, settings)
+      await sendDownloadEmail(email, book?.title || '', book?.author || '', downloadLinks, recoveryUrl, settings)
     } catch (err) {
       const msg = `Email récupération: ${(err as Error).message}`
       console.error(msg)
