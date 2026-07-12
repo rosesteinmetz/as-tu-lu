@@ -77,6 +77,8 @@ CREATE POLICY "Lecture publique profil auteur" ON author_profiles
   FOR SELECT USING (true);
 CREATE POLICY "Insertion profil par propriétaire" ON author_profiles
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Modification profil par propriétaire" ON author_profiles
+  FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Suppression profil par propriétaire" ON author_profiles
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -97,6 +99,8 @@ CREATE POLICY "Lecture paramètres par propriétaire" ON newsletter_settings
   FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Insertion paramètres par propriétaire" ON newsletter_settings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Modification paramètres par propriétaire" ON newsletter_settings
+  FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Suppression paramètres par propriétaire" ON newsletter_settings
   FOR DELETE USING (auth.uid() = user_id);
 

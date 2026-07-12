@@ -37,8 +37,14 @@ CREATE POLICY "Lecture publique images" ON storage.objects
 -- Aucune politique SELECT publique pour epub/, pdf/, mobi/
 
 -- 7. Politiques DELETE manquantes (RGPD)
+CREATE POLICY "Modification profil par propriétaire" ON author_profiles
+  FOR UPDATE USING (auth.uid() = user_id);
+
 CREATE POLICY "Suppression profil par propriétaire" ON author_profiles
   FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Modification paramètres par propriétaire" ON newsletter_settings
+  FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Suppression paramètres par propriétaire" ON newsletter_settings
   FOR DELETE USING (auth.uid() = user_id);

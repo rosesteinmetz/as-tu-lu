@@ -11,7 +11,7 @@ async function getBook(id: string) {
 
   const { data } = await supabase
     .from('books')
-    .select('*')
+    .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link')
     .eq('id', id)
     .single()
 

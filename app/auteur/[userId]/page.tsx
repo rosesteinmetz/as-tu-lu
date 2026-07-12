@@ -14,14 +14,14 @@ async function getProfile(slugOrId: string) {
   const supabase = getClient()
   let { data } = await supabase
     .from('author_profiles')
-    .select('*')
+      .select('name, tagline, avatar_url, bio, photo_urls, slug, user_id')
     .eq('slug', slugOrId)
     .maybeSingle()
 
   if (!data) {
     const result = await supabase
       .from('author_profiles')
-      .select('*')
+    .select('name, tagline, avatar_url, bio, photo_urls, slug, user_id')
       .eq('user_id', slugOrId)
       .maybeSingle()
     data = result.data

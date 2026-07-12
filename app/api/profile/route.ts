@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from('author_profiles')
-    .select('*')
+    .select('id, name, tagline, avatar_url, bio, photo_urls, slug, user_id, created_at')
     .eq('user_id', user.id)
     .maybeSingle()
 

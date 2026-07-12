@@ -12,14 +12,14 @@ async function getBook(slug: string) {
   // try slug first, then UUID
   let { data } = await supabase
     .from('books')
-    .select('*')
+    .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link, slug')
     .eq('slug', slug)
     .maybeSingle()
 
   if (!data) {
     const result = await supabase
       .from('books')
-      .select('*')
+      .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link, slug')
       .eq('id', slug)
       .maybeSingle()
     data = result.data
