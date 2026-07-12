@@ -55,3 +55,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_rate_limits_key_created ON rate_limits(key, created_at);
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Rate limits: anon peut insérer" ON rate_limits FOR INSERT WITH CHECK (true);
+CREATE POLICY "Rate limits: anon peut lire" ON rate_limits FOR SELECT USING (true);
+CREATE POLICY "Rate limits: anon peut supprimer" ON rate_limits FOR DELETE USING (true);
