@@ -1,4 +1,3 @@
-import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
@@ -14,13 +13,17 @@ export async function GET(
     return NextResponse.json({ error: 'Token requis' }, { status: 400 })
   }
 
-  const supabase = createServerClient(
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    return NextResponse.json({ error: 'Service non configuré' }, { status: 500 })
+  }
+
+  const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return [] }, setAll() {} } }
+    serviceRoleKey
   )
 
-  const { data: sub } = await supabase
+  const { data: sub } = await admin
     .from('subscribers')
     .select('id')
     .eq('book_id', id)
@@ -31,7 +34,7 @@ export async function GET(
     return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
   }
 
-  const { data: book } = await supabase
+  const { data: book } = await admin
     .from('books')
     .select('epub_url, pdf_url')
     .eq('id', id)
@@ -40,20 +43,6 @@ export async function GET(
   if (!book) {
     return NextResponse.json({ error: 'Livre introuvable' }, { status: 404 })
   }
-
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) {
-    return NextResponse.json({
-      epub_url: book.epub_url,
-      pdf_url: book.pdf_url,
-      _warning: 'bucket public',
-    })
-  }
-
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey
-  )
 
   const storageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/books/`
 
