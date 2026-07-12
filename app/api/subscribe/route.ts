@@ -84,7 +84,9 @@ export async function POST(request: Request) {
     try {
       await sendDownloadEmail(email, book?.title || '', book?.author || '', downloadUrl, settings)
     } catch (err) {
-      console.error('Download email error:', err)
+      const msg = `Email récupération: ${(err as Error).message}`
+      console.error(msg)
+      if (!newsletterErrors.includes(msg)) newsletterErrors.push(msg)
     }
   }
 

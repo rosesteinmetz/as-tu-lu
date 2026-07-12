@@ -13,7 +13,15 @@ export async function sendDownloadEmail(
   downloadUrl: string,
   config: NewsletterConfig
 ) {
-  if (!config.api_key || config.provider !== 'brevo') return
+  if (!config.api_key) return
+  if (config.provider !== 'brevo') {
+    console.warn(`sendDownloadEmail: provider "${config.provider}" non supporté, skip`)
+    return
+  }
+  if (!config.notify_email) {
+    console.warn('sendDownloadEmail: notify_email non configuré, impossible d\'envoyer')
+    return
+  }
 
   const siteName = 'As-tu-lu'
   const html = `
@@ -37,8 +45,6 @@ export async function sendDownloadEmail(
     </div>
   `
 
-  const senderEmail = config.notify_email || 'noreply@as-tu-lu.fr'
-
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
@@ -50,7 +56,7 @@ export async function sendDownloadEmail(
       templateId: null,
       subject: `Ton livre "${bookTitle}" est prêt à être téléchargé`,
       htmlContent: html,
-      sender: { name: siteName, email: senderEmail },
+      sender: { name: siteName, email: config.notify_email },
     }),
   })
 
