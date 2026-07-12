@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
+import { validateFile } from '@/lib/file-validator'
 
 async function createClient(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
 
   for (const photo of photos) {
     if (photo.size === 0) continue
+    const err = validateFile(photo, 'images', 10 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `Photo : ${err}` }, { status: 400 })
     const ext = photo.name.split('.').pop()
     const fileName = `author/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error } = await supabase.storage.from('images').upload(fileName, photo)
@@ -76,6 +79,8 @@ export async function POST(request: Request) {
 
   let avatar_url = keepAvatar
   if (avatarFile && avatarFile.size > 0) {
+    const err = validateFile(avatarFile, 'images', 5 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `Avatar : ${err}` }, { status: 400 })
     const ext = avatarFile.name.split('.').pop()
     const fileName = `author/avatar-${Date.now()}.${ext}`
     const { error: uploadError } = await supabase.storage.from('images').upload(fileName, avatarFile)

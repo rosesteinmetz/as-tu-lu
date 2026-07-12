@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
+import { validateFile } from '@/lib/file-validator'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 
@@ -84,6 +85,19 @@ export async function POST(request: Request) {
     if (f && f.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: `Un des fichiers dépasse 50 Mo.` }, { status: 400 })
     }
+  }
+
+  if (coverFile && coverFile.size > 0) {
+    const err = validateFile(coverFile, 'images', 10 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
+  }
+  if (epubFile && epubFile.size > 0) {
+    const err = validateFile(epubFile, 'epub', MAX_FILE_SIZE)
+    if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
+  }
+  if (pdfFile && pdfFile.size > 0) {
+    const err = validateFile(pdfFile, 'pdf', MAX_FILE_SIZE)
+    if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
   }
 
   let cover_url = null

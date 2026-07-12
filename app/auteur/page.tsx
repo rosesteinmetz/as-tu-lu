@@ -3,13 +3,13 @@ import { createServerClient } from '@supabase/ssr';
 
 export const dynamic = 'force-dynamic';
 
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { cookies: { getAll() { return [] }, setAll() {} } }
-);
-
 async function getData() {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return [] }, setAll() {} } }
+  );
+
   const [{ data: profiles }, { data: books }] = await Promise.all([
     supabase.from('author_profiles').select('*').order('name'),
     supabase.from('books').select('user_id').not('user_id', 'is', null),

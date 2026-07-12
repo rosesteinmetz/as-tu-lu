@@ -77,8 +77,8 @@ CREATE POLICY "Lecture publique profil auteur" ON author_profiles
   FOR SELECT USING (true);
 CREATE POLICY "Insertion profil par propriétaire" ON author_profiles
   FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Modification profil par propriétaire" ON author_profiles
-  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Suppression profil par propriétaire" ON author_profiles
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Table des paramètres newsletter
 CREATE TABLE newsletter_settings (
@@ -97,8 +97,8 @@ CREATE POLICY "Lecture paramètres par propriétaire" ON newsletter_settings
   FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Insertion paramètres par propriétaire" ON newsletter_settings
   FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Modification paramètres par propriétaire" ON newsletter_settings
-  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Suppression paramètres par propriétaire" ON newsletter_settings
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Politique de sécurité : tout le monde peut inscrire un email
 ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
@@ -112,3 +112,19 @@ CREATE POLICY "Lecture des abonnés par propriétaire" ON subscribers
       SELECT user_id FROM books WHERE id = book_id
     )
   );
+
+-- Suppression d'un abonné par le propriétaire du livre
+CREATE POLICY "Suppression abonné par propriétaire" ON subscribers
+  FOR DELETE USING (
+    auth.uid() IN (
+      SELECT user_id FROM books WHERE id = book_id
+    )
+  );
+
+-- Table de rate limiting (cross-instance serverless)
+CREATE TABLE IF NOT EXISTS rate_limits (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  key TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_key_created ON rate_limits(key, created_at);

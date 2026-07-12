@@ -2,14 +2,16 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { notFound } from 'next/navigation';
 
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { cookies: { getAll() { return [] }, setAll() {} } }
-);
+function getClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return [] }, setAll() {} } }
+  );
+}
 
 async function getProfile(slugOrId: string) {
-  // try slug first, then UUID
+  const supabase = getClient()
   let { data } = await supabase
     .from('author_profiles')
     .select('*')
@@ -29,6 +31,7 @@ async function getProfile(slugOrId: string) {
 }
 
 async function getData(slugOrId: string) {
+  const supabase = getClient()
   const profile = await getProfile(slugOrId);
   if (!profile) return { profile: null, books: [] };
 

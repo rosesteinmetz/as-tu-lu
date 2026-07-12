@@ -17,13 +17,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Email et book_id requis' }, { status: 400 })
   }
 
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Format d\'email invalide' }, { status: 400 })
+  }
+
   const ip_address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || ''
 
   const downloadToken = crypto.randomUUID()
 
-  if (!checkRateLimit(ip_address || 'unknown', 5, 60000)) {
+  if (!await checkRateLimit(ip_address || 'unknown', 5, 60000)) {
     return NextResponse.json({ error: 'Trop de tentatives. Réessaie dans une minute.' }, { status: 429 })
   }
 

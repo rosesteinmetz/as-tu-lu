@@ -1,16 +1,28 @@
-const rateMap = new Map<string, { count: number; resetAt: number }>();
+import { createClient } from '@supabase/supabase-js'
 
-export function checkRateLimit(ip: string, maxRequests = 5, windowMs = 60000): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
+export async function checkRateLimit(
+  key: string,
+  maxRequests = 5,
+  windowMs = 60000
+): Promise<boolean> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
+  const since = new Date(Date.now() - windowMs).toISOString()
 
-  if (entry.count >= maxRequests) return false;
+  // nettoie les entrées expirées
+  await supabase.from('rate_limits').delete().lt('created_at', since)
 
-  entry.count++;
-  return true;
+  const { count } = await supabase
+    .from('rate_limits')
+    .select('*', { count: 'exact', head: true })
+    .eq('key', key)
+    .gte('created_at', since)
+
+  if (count && count >= maxRequests) return false
+
+  await supabase.from('rate_limits').insert({ key })
+  return true
 }

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
+import { validateFile } from '@/lib/file-validator'
 
 async function createClient(request: Request) {
   const authHeader = request.headers.get('authorization')
@@ -99,18 +100,24 @@ export async function PUT(
 
   const coverFile = formData.get('cover') as File | null
   if (coverFile && coverFile.size > 0 && coverFile.name) {
+    const err = validateFile(coverFile, 'images', 10 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
     const url = await uploadFile(supabase, coverFile, 'images', `cover-${id}`)
     if (url) updates.cover_url = url
   }
 
   const epubFile = formData.get('epub') as File | null
   if (epubFile && epubFile.size > 0 && epubFile.name) {
+    const err = validateFile(epubFile, 'epub', 50 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
     const url = await uploadFile(supabase, epubFile, 'books', `epub-${id}`)
     if (url) updates.epub_url = url
   }
 
   const pdfFile = formData.get('pdf') as File | null
   if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
+    const err = validateFile(pdfFile, 'pdf', 50 * 1024 * 1024)
+    if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
     const url = await uploadFile(supabase, pdfFile, 'books', `pdf-${id}`)
     if (url) updates.pdf_url = url
   }
