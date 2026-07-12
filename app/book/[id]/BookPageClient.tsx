@@ -11,8 +11,6 @@ type Book = {
   genre: string
   description: string
   cover_url: string | null
-  epub_url: string | null
-  pdf_url: string | null
   user_id: string | null
   download_count: number
   is_free?: boolean
