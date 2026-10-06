@@ -146,30 +146,57 @@ export async function POST(request: Request) {
     const baseSlug = slugify(title)
     const slug = await ensureUniqueSlug(supabase, 'books', baseSlug)
 
-    const { data: book, error } = await supabase
-      .from('books')
-      .insert({
-        title,
-        author,
-        genre,
-        description,
-        cover_url,
-        epub_url,
-        pdf_url,
-        is_free: isFree,
-        external_link: isFree ? '' : (externalLink || ''),
-        sort_order: nextOrder,
-        slug,
-        user_id: user.id,
-      }, {
-        defaultToNull: false,
-      })
-      .select()
-      .single()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    let bookData
+    let insertError
+    if (serviceRoleKey) {
+      const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+      const result = await admin
+        .from('books')
+        .insert({
+          title,
+          author,
+          genre,
+          description,
+          cover_url,
+          epub_url,
+          pdf_url,
+          is_free: isFree,
+          external_link: isFree ? '' : (externalLink || ''),
+          sort_order: nextOrder,
+          slug,
+          user_id: user.id,
+        })
+        .select()
+        .single()
+      bookData = result.data
+      insertError = result.error
+    } else {
+      const result = await supabase
+        .from('books')
+        .insert({
+          title,
+          author,
+          genre,
+          description,
+          cover_url,
+          epub_url,
+          pdf_url,
+          is_free: isFree,
+          external_link: isFree ? '' : (externalLink || ''),
+          sort_order: nextOrder,
+          slug,
+          user_id: user.id,
+        }, { defaultToNull: false })
+        .select()
+        .single()
+      bookData = result.data
+      insertError = result.error
+    }
 
-    if (error) throw new Error(error.message)
+    if (insertError) throw new Error(insertError.message)
 
-    return NextResponse.json(book, { status: 201 })
+    return NextResponse.json(bookData, { status: 201 })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
