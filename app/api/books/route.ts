@@ -149,13 +149,20 @@ export async function POST(request: Request) {
     const { data: book, error } = await supabase
       .from('books')
       .insert({
-        title, author, genre, description,
-        cover_url, epub_url, pdf_url,
+        title,
+        author,
+        genre,
+        description,
+        cover_url,
+        epub_url,
+        pdf_url,
         is_free: isFree,
         external_link: isFree ? '' : (externalLink || ''),
         sort_order: nextOrder,
         slug,
         user_id: user.id,
+      }, {
+        defaultToNull: false,
       })
       .select()
       .single()
