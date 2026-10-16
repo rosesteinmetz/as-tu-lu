@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import BookCard from './BookCard'
+import BookCard, { type Book } from './BookCard'
 
 const FICTION = [
   'Romance', 'Romance contemporaine', 'Romance historique', 'Romance paranormale',
@@ -16,7 +16,7 @@ const FICTION = [
 
 const NON_FICTION = ['Développement personnel', 'Biographie', 'Essai']
 
-export default function BookGrid({ books }: { books: any[] }) {
+export default function BookGrid({ books }: { books: Book[] }) {
   const [filter, setFilter] = useState<'all' | 'free'>('all')
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set())
 
@@ -49,6 +49,11 @@ export default function BookGrid({ books }: { books: any[] }) {
 
   const nonFictionBooks = useMemo(
     () => filtered.filter((b) => NON_FICTION.includes(b.genre)),
+    [filtered]
+  )
+
+  const otherBooks = useMemo(
+    () => filtered.filter((b) => !FICTION.includes(b.genre) && !NON_FICTION.includes(b.genre)),
     [filtered]
   )
 
@@ -119,6 +124,17 @@ export default function BookGrid({ books }: { books: any[] }) {
               <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Non-fiction</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {nonFictionBooks.map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {otherBooks.length > 0 && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Autres</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {otherBooks.map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
               </div>

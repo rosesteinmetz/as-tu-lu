@@ -1,31 +1,10 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
 import { validateFile } from '@/lib/file-validator'
-
-async function createClient(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  const cookieHeader = request.headers.get('cookie') || ''
-  const cookies = cookieHeader.split(';').map(c => {
-    const [name, ...rest] = c.trim().split('=')
-    return { name, value: rest.join('=') }
-  }).filter(c => c.name)
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return cookies }, setAll() {} } }
-  )
-
-  if (token) {
-    await supabase.auth.setSession({ access_token: token, refresh_token: '' })
-  }
-  return supabase
-}
+import { createRequestClient } from '@/lib/supabase-request'
 
 export async function GET(request: Request) {
-  const supabase = await createClient(request)
+  const supabase = createRequestClient(request)
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -38,11 +17,11 @@ export async function GET(request: Request) {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  return NextResponse.json(data || { name: 'Céline Autrice', tagline: '', avatar_url: '', bio: '', photo_urls: [] })
+  return NextResponse.json(data || { name: '', tagline: '', avatar_url: '', bio: '', photo_urls: [] })
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient(request)
+  const supabase = createRequestClient(request)
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -62,33 +41,40 @@ export async function POST(request: Request) {
   try { existingPhotos = JSON.parse(keepPhotos) } catch {}
 
   const uploadedUrls: string[] = []
-
-  for (const photo of photos) {
-    if (photo.size === 0) continue
-    const err = validateFile(photo, 'images', 10 * 1024 * 1024)
-    if (err) return NextResponse.json({ error: `Photo : ${err}` }, { status: 400 })
-    const ext = photo.name.split('.').pop()
-    const fileName = `author/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage.from('images').upload(fileName, photo)
-    if (error) throw new Error(error.message)
-    const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName)
-    uploadedUrls.push(publicUrl)
-  }
-
-  const allPhotos = [...existingPhotos, ...uploadedUrls].slice(0, 5)
-
   let avatar_url = keepAvatar
-  if (avatarFile && avatarFile.size > 0) {
-    const err = validateFile(avatarFile, 'images', 5 * 1024 * 1024)
-    if (err) return NextResponse.json({ error: `Avatar : ${err}` }, { status: 400 })
-    const ext = avatarFile.name.split('.').pop()
-    const fileName = `author/avatar-${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('images').upload(fileName, avatarFile)
-    if (!uploadError) {
+
+  try {
+    for (const photo of photos) {
+      if (photo.size === 0) continue
+      const err = validateFile(photo, 'images', 10 * 1024 * 1024)
+      if (err) return NextResponse.json({ error: `Photo : ${err}` }, { status: 400 })
+      const ext = photo.name.split('.').pop()
+      const fileName = `author/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('images').upload(fileName, photo)
+      if (error) throw new Error(error.message)
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName)
+      uploadedUrls.push(publicUrl)
+    }
+
+    if (avatarFile && avatarFile.size > 0) {
+      const err = validateFile(avatarFile, 'images', 5 * 1024 * 1024)
+      if (err) return NextResponse.json({ error: `Avatar : ${err}` }, { status: 400 })
+      const ext = avatarFile.name.split('.').pop()
+      const fileName = `author/avatar-${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage.from('images').upload(fileName, avatarFile)
+      if (uploadError) throw new Error(uploadError.message)
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName)
       avatar_url = publicUrl
     }
+  } catch (uploadErr) {
+    console.error('profile upload error:', uploadErr)
+    return NextResponse.json(
+      { error: "Échec de l'envoi de l'image. Réessaie." },
+      { status: 500 }
+    )
   }
+
+  const allPhotos = [...existingPhotos, ...uploadedUrls].slice(0, 5)
 
   const { data: existing } = await supabase
     .from('author_profiles')
@@ -96,7 +82,7 @@ export async function POST(request: Request) {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  const payload: Record<string, any> = { user_id: user.id, name, tagline, avatar_url, bio, photo_urls: allPhotos }
+  const payload: Record<string, unknown> = { user_id: user.id, name, tagline, avatar_url, bio, photo_urls: allPhotos }
 
   const baseSlug = slugify(name || 'auteur')
   payload.slug = await ensureUniqueSlug(supabase, 'author_profiles', baseSlug, existing?.id)
@@ -110,6 +96,9 @@ export async function POST(request: Request) {
     error = result.error
   }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('profile POST error:', error.message)
+    return NextResponse.json({ error: "Impossible d'enregistrer le profil." }, { status: 500 })
+  }
   return NextResponse.json({ success: true, photo_urls: allPhotos })
 }

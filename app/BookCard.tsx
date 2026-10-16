@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-type Book = {
+export type Book = {
   id: string
   slug?: string | null
   title: string
@@ -16,16 +16,8 @@ type Book = {
   external_link?: string | null
 }
 
-export default function BookCard({ book }: { book: Book }) {
-  const router = useRouter()
-
-  const goToAuthor = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation()
-    e.preventDefault()
-    router.push(`/auteur/${book.user_id}`)
-  }
-
-  const CardContent = () => (
+function CardContent({ book, goToAuthor }: { book: Book; goToAuthor: (e: React.SyntheticEvent) => void }) {
+  return (
     <>
       {book.cover_url ? (
         <img src={book.cover_url} alt={book.title} className="w-full aspect-[210/297] object-contain bg-gray-100 rounded-lg mb-3" />
@@ -42,7 +34,7 @@ export default function BookCard({ book }: { book: Book }) {
             tabIndex={0}
             className="hover:text-blue-600 cursor-pointer"
             onClick={goToAuthor}
-            onKeyDown={(e) => { if (e.key === 'Enter') goToAuthor(e as any) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') goToAuthor(e) }}
           >
             {book.author}
           </span>
@@ -65,6 +57,16 @@ export default function BookCard({ book }: { book: Book }) {
       )}
     </>
   )
+}
+
+export default function BookCard({ book }: { book: Book }) {
+  const router = useRouter()
+
+  const goToAuthor = (e: React.SyntheticEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    router.push(`/auteur/${book.user_id}`)
+  }
 
   if (book.is_free === false && book.external_link) {
     return (
@@ -74,7 +76,7 @@ export default function BookCard({ book }: { book: Book }) {
         rel="noopener noreferrer"
         className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 block"
       >
-        <CardContent />
+        <CardContent book={book} goToAuthor={goToAuthor} />
       </a>
     )
   }
@@ -84,7 +86,7 @@ export default function BookCard({ book }: { book: Book }) {
       href={`/livre/${book.slug || book.id}`}
       className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100 block"
     >
-      <CardContent />
+      <CardContent book={book} goToAuthor={goToAuthor} />
     </Link>
   )
 }

@@ -15,13 +15,11 @@ export default function AuthHandler() {
     const type = params.get('type');
 
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data, error }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         window.history.replaceState(null, '', window.location.pathname);
         if (type === 'recovery') {
           router.push('/auth/update-password');
-        } else if (type === 'signup') {
-          router.push('/auth/confirm');
         } else {
           router.push('/dashboard');
         }

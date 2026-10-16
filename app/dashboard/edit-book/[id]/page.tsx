@@ -25,21 +25,24 @@ export default function EditBookPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch(`/api/books/${id}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setTitre(data.title || '');
-        setAuteur(data.author || '');
-        setGenre(data.genre || 'Romance');
-        setDescription(data.description || '');
-        setIsFree(data.is_free !== false);
-        setExternalLink(data.external_link || '');
-        setCoverUrl(data.cover_url || '');
-        setEpubUrl(data.epub_url || '');
-        setPdfUrl(data.pdf_url || '');
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    (async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/books/${id}`, {
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : undefined,
+      });
+      const data = await res.json();
+      setTitre(data.title || '');
+      setAuteur(data.author || '');
+      setGenre(data.genre || 'Romance');
+      setDescription(data.description || '');
+      setIsFree(data.is_free !== false);
+      setExternalLink(data.external_link || '');
+      setCoverUrl(data.cover_url || '');
+      setEpubUrl(data.epub_url || '');
+      setPdfUrl(data.pdf_url || '');
+      setLoading(false);
+    })().catch(() => setLoading(false));
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,7 +175,7 @@ export default function EditBookPage() {
 
           {!isFree && (
             <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lien d'achat (Amazon, Fnac, etc.)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lien d’achat (Amazon, Fnac, etc.)</label>
               <input
                 type="url"
                 value={externalLink}
@@ -211,7 +214,7 @@ export default function EditBookPage() {
                 <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Kindle (MOBI) n'est plus requis — Amazon accepte l'ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
+            <p className="text-xs text-gray-400 mt-1">Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
           </div>
         )}
 

@@ -3,7 +3,8 @@ import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json()
+    const body = await req.json().catch(() => ({}))
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
     if (!email) {
       return Response.json({ error: 'Email requis' }, { status: 400 })
     }
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-    if (!await checkRateLimit(`reset:${email}`, 3, 60000)) {
+    if (!await checkRateLimit(`reset:${ip}:${email}`, 3, 60000)) {
       return Response.json({ error: 'Trop de tentatives. Réessaie dans une minute.' }, { status: 429 })
     }
 
@@ -25,18 +26,27 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Configuration serveur manquante' }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        flowType: 'implicit',
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${siteUrl}/auth/update-password`,
     })
 
     if (error) {
-      return Response.json({ error: error.message }, { status: 400 })
+      console.error('reset-password error:', error.message)
+      return Response.json({ error: "Impossible d'envoyer l'email de réinitialisation." }, { status: 400 })
     }
 
     return Response.json({ data: {} })
   } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 500 })
+    console.error('reset-password error:', err)
+    return Response.json({ error: 'Une erreur est survenue.' }, { status: 500 })
   }
 }

@@ -55,15 +55,14 @@ export default function BookPageClient({ book }: { book: Book }) {
       return
     }
 
-    const errs = data.newsletter_errors ? encodeURIComponent(JSON.stringify(data.newsletter_errors)) : ''
-    const tokenParam = data.download_token ? `&token=${data.download_token}` : ''
-    router.push(`/book/${book.id}/confirmation?${errs ? `errors=${errs}${tokenParam}` : `token=${data.download_token || ''}`}`)
+    const tokenParam = data.download_token ? `token=${encodeURIComponent(data.download_token)}` : ''
+    router.push(`/book/${book.id}/confirmation?${tokenParam}`)
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center">
       <Link href="/" className="text-blue-600 text-sm hover:underline mb-6 self-start max-w-2xl w-full">
-        &larr; Retour à l'accueil
+        &larr; Retour à l&apos;accueil
       </Link>
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col items-center">
@@ -102,15 +101,21 @@ export default function BookPageClient({ book }: { book: Book }) {
             <p className="text-gray-600 text-sm mb-6 leading-relaxed">{book.description}</p>
           </div>
 
-          {isPaid && book.external_link ? (
-            <a
-              href={book.external_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-amber-600 text-white p-3 rounded-lg font-bold hover:bg-amber-700 transition text-sm text-center block"
-            >
-              Acheter sur la librairie partenaire
-            </a>
+          {isPaid ? (
+            book.external_link ? (
+              <a
+                href={book.external_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-amber-600 text-white p-3 rounded-lg font-bold hover:bg-amber-700 transition text-sm text-center block"
+              >
+                Acheter sur la librairie partenaire
+              </a>
+            ) : (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">
+                Ce livre est en vente mais le lien d&apos;achat n&apos;est pas disponible pour le moment.
+              </p>
+            )
           ) : (
             <form onSubmit={handleDownload} className="flex flex-col gap-3">
               <input

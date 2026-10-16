@@ -95,7 +95,7 @@ export default function EditProfilePage() {
 
       <form onSubmit={handleSave} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'auteur</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nom d’auteur</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom d'auteur" className="w-full border p-2.5 rounded-lg text-sm" />
         </div>
 
@@ -120,7 +120,7 @@ export default function EditProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Photos de l'univers ({existingUrls.length}/5)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Photos de l’univers ({existingUrls.length}/5)</label>
           <div className="grid grid-cols-5 gap-2 mb-3">
             {existingUrls.map((url, i) => (
               <div key={i} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">

@@ -41,7 +41,7 @@ export async function GET(
 
   const { data: book } = await admin
     .from('books')
-    .select('epub_url, pdf_url')
+    .select('epub_url, pdf_url, title, author')
     .eq('id', id)
     .single()
 
@@ -64,5 +64,12 @@ export async function GET(
     toSigned(book.pdf_url),
   ])
 
-  return NextResponse.json({ epub_url, pdf_url })
+  return NextResponse.json({
+    epub_url,
+    pdf_url,
+    book: {
+      title: book.title,
+      author: book.author,
+    },
+  })
 }

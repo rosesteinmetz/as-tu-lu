@@ -5,6 +5,14 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      // Les couvertures/photos viennent de Supabase (URLs dynamiques) : on
+      // n'utilise volontairement pas next/image (évite les coûts
+      // d'optimisation Vercel et le besoin de remotePatterns).
+      "@next/next/no-img-element": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

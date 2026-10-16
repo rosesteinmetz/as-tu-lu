@@ -11,34 +11,50 @@ export default function UpdatePasswordPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('access_token')) {
-      setError('Lien invalide ou expiré. Demande un nouveau lien de réinitialisation.');
-      return;
-    }
-
-    const params = new URLSearchParams(hash.replace('#', '?'));
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-
-    if (!accessToken) {
-      setError('Token manquant. Demande un nouveau lien.');
-      return;
-    }
-
     const supabase = createClient();
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken || '',
-    }).then(({ error: sessionError }) => {
-      if (sessionError) {
-        setError(sessionError.message);
-      } else {
-        setReady(true);
-        // Clean the hash from URL
-        window.history.replaceState(null, '', '/auth/update-password');
+
+    const setup = async () => {
+      // 1) Flux PKCE : le lien contient ?code=...
+      const code = new URL(window.location.href).searchParams.get('code');
+      if (code) {
+        const { error: codeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (!codeError) {
+          window.history.replaceState(null, '', '/auth/update-password');
+          setReady(true);
+          return;
+        }
       }
-    });
+
+      // 2) Flux implicite : le lien contient #access_token=...
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.replace('#', '?'));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          if (!sessionError) {
+            window.history.replaceState(null, '', '/auth/update-password');
+            setReady(true);
+            return;
+          }
+        }
+      }
+
+      // 3) Session déjà établie (recovery validé par /auth/confirm via cookie)
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setReady(true);
+        return;
+      }
+
+      setError('Lien invalide ou expiré. Demande un nouveau lien de réinitialisation.');
+    };
+
+    setup();
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

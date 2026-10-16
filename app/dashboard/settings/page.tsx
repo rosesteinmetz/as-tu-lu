@@ -81,18 +81,18 @@ export default function SettingsPage() {
             <option value="brevo">Brevo (Sendinblue)</option>
             <option value="mailerlite">MailerLite</option>
             <option value="webhook">Webhook (autre service)</option>
+            <option value="notify">Aucune intégration — recevoir un email par inscrit</option>
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Clé API
-            <span className="text-gray-400 font-normal ml-1">(obligatoire sauf Webhook)</span>
-          </label>
-          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder={provider === 'brevo' ? 'Votre clé API Brevo' : provider === 'mailerlite' ? 'Votre clé API MailerLite' : 'Optionnel'} />
-        </div>
+        {(provider === 'brevo' || provider === 'mailerlite') && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Clé API</label>
+            <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder={provider === 'brevo' ? 'Votre clé API Brevo' : 'Votre clé API MailerLite'} />
+          </div>
+        )}
 
-        {provider !== 'webhook' && (
+        {(provider === 'brevo' || provider === 'mailerlite') && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ID de liste <span className="text-gray-400 font-normal">(optionnel)</span></label>
             <input type="text" value={listId} onChange={(e) => setListId(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="Laisse vide pour utiliser la liste par défaut" />
@@ -108,7 +108,7 @@ export default function SettingsPage() {
 
         <div className="border-t pt-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Notification par email</h3>
-          <p className="text-xs text-gray-500 mb-3">Reçois un email à chaque nouvel inscrit (Brevo uniquement). L&apos;adresse doit être un expéditeur validé dans Brevo.</p>
+          <p className="text-xs text-gray-500 mb-3">Reçois un email à chaque nouvel inscrit (avec son email et les consentements donnés). Fonctionne pour tous les services.</p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ton email de notification</label>
             <input type="email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="ton@email.com" />

@@ -27,12 +27,16 @@ export default function DashboardAuteur() {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       const userId = session?.user?.id;
-      fetch(`/api/books${userId ? `?user_id=${userId}` : ''}`)
+      if (!userId) {
+        router.replace('/auth');
+        return;
+      }
+      fetch(`/api/books?user_id=${userId}`)
         .then((r) => r.json())
         .then((data) => { if (Array.isArray(data)) setBooks(data); setLoadingBooks(false); })
         .catch(() => setLoadingBooks(false));
     });
-  }, []);
+  }, [router]);
   const [message, setMessage] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -49,7 +53,8 @@ export default function DashboardAuteur() {
 
     if (res.ok) {
       const userId = session?.user?.id;
-      const data = await fetch(`/api/books${userId ? `?user_id=${userId}` : ''}`).then(r => r.json());
+      if (!userId) return;
+      const data = await fetch(`/api/books?user_id=${userId}`).then(r => r.json());
       if (Array.isArray(data)) setBooks(data);
     }
   };
@@ -195,7 +200,7 @@ export default function DashboardAuteur() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'auteur</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l’auteur</label>
             <input type="text" value={auteur} onChange={(e) => setAuteur(e.target.value)} placeholder="Nom d'auteur" className="w-full border p-2.5 rounded-lg text-sm" required />
           </div>
 
@@ -254,7 +259,7 @@ export default function DashboardAuteur() {
 
             {!isFree && (
               <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lien d'achat (Amazon, Fnac, etc.)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lien d’achat (Amazon, Fnac, etc.)</label>
                 <input
                   type="url"
                   value={externalLink}
@@ -285,13 +290,13 @@ export default function DashboardAuteur() {
                 <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n'est plus requis — Amazon accepte l'ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
+            <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
           </div>
           )}
 
           <label className="flex gap-2 text-xs text-gray-500 items-start border-t pt-4">
             <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} required className="mt-0.5" />
-            Je certifie détenir les droits d'auteur du contenu que je publie et j&apos;accepte les <Link href="/cgu-auteurs" target="_blank" className="text-blue-600 underline">conditions d'utilisation des auteurs</Link>.
+            Je certifie détenir les droits d’auteur du contenu que je publie et j&apos;accepte les <Link href="/cgu-auteurs" target="_blank" className="text-blue-600 underline">conditions d’utilisation des auteurs</Link>.
           </label>
 
           <button type="submit" disabled={loading || !acceptedTerms} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm mt-4 disabled:opacity-50">

@@ -1,45 +1,20 @@
-import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
 import { validateFile } from '@/lib/file-validator'
-
-async function createClient(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  const cookieHeader = request.headers.get('cookie') || ''
-  const cookies = cookieHeader.split(';').map(c => {
-    const [name, ...rest] = c.trim().split('=')
-    return { name, value: rest.join('=') }
-  }).filter(c => c.name)
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return cookies }, setAll() {} } }
-  )
-
-  if (token) {
-    await supabase.auth.setSession({ access_token: token, refresh_token: '' })
-  }
-  return supabase
-}
+import { createRequestClient, createAnonClient, type RequestClient } from '@/lib/supabase-request'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
 
-  const anonClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return [] }, setAll() {} } }
-  )
+  const anonClient = createAnonClient()
 
   const { data: book, error } = await anonClient
     .from('books')
-    .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link, slug')
+    .select('id, title, author, genre, description, cover_url, user_id, download_count, is_free, external_link, slug, epub_url, pdf_url')
     .eq('id', id)
     .single()
 
@@ -47,11 +22,21 @@ export async function GET(
     return NextResponse.json({ error: 'Livre introuvable' }, { status: 404 })
   }
 
+  // Les URLs des fichiers ne sont exposées qu'au propriétaire.
+  const supabase = createRequestClient(request)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.id !== book.user_id) {
+    const publicBook = { ...book }
+    delete publicBook.epub_url
+    delete publicBook.pdf_url
+    return NextResponse.json(publicBook)
+  }
+
   return NextResponse.json(book)
 }
 
 async function uploadFile(
-  supabase: any,
+  supabase: RequestClient,
   file: File,
   bucket: string,
   prefix: string
@@ -66,7 +51,7 @@ async function uploadFile(
       upsert: false,
     })
 
-  if (error) return null
+  if (error) throw new Error(error.message)
 
   const { data: urlData } = supabase.storage
     .from(bucket)
@@ -80,9 +65,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient(request)
+  const supabase = createRequestClient(request)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
+
+  // Vérifier la propriété AVANT tout upload de fichier.
+  const { data: owned } = await supabase
+    .from('books')
+    .select('id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!owned) {
+    return NextResponse.json({ error: 'Introuvable ou accès refusé.' }, { status: 404 })
+  }
 
   const formData = await request.formData()
 
@@ -93,34 +89,50 @@ export async function PUT(
   const isFree = formData.get('is_free') === 'true'
   const externalLink = formData.get('external_link') as string
 
-  const updates: Record<string, any> = {
+  if (!title?.trim() || !author?.trim() || !description?.trim()) {
+    return NextResponse.json({ error: 'Titre, auteur et description sont requis.' }, { status: 400 })
+  }
+
+  if (!genre?.trim()) {
+    return NextResponse.json({ error: 'Le genre littéraire est requis.' }, { status: 400 })
+  }
+
+  const updates: Record<string, unknown> = {
     title, author, genre, description,
     is_free: isFree,
     external_link: isFree ? '' : (externalLink || ''),
   }
 
-  const coverFile = formData.get('cover') as File | null
-  if (coverFile && coverFile.size > 0 && coverFile.name) {
-    const err = validateFile(coverFile, 'images', 10 * 1024 * 1024)
-    if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
-    const url = await uploadFile(supabase, coverFile, 'images', `cover-${id}`)
-    if (url) updates.cover_url = url
-  }
+  try {
+    const coverFile = formData.get('cover') as File | null
+    if (coverFile && coverFile.size > 0 && coverFile.name) {
+      const err = validateFile(coverFile, 'images', 10 * 1024 * 1024)
+      if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
+      const url = await uploadFile(supabase, coverFile, 'images', `covers/${id}`)
+      if (url) updates.cover_url = url
+    }
 
-  const epubFile = formData.get('epub') as File | null
-  if (epubFile && epubFile.size > 0 && epubFile.name) {
-    const err = validateFile(epubFile, 'epub', 50 * 1024 * 1024)
-    if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
-    const url = await uploadFile(supabase, epubFile, 'books', `epub-${id}`)
-    if (url) updates.epub_url = url
-  }
+    const epubFile = formData.get('epub') as File | null
+    if (epubFile && epubFile.size > 0 && epubFile.name) {
+      const err = validateFile(epubFile, 'epub', 50 * 1024 * 1024)
+      if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
+      const url = await uploadFile(supabase, epubFile, 'books', `epub-${id}`)
+      if (url) updates.epub_url = url
+    }
 
-  const pdfFile = formData.get('pdf') as File | null
-  if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
-    const err = validateFile(pdfFile, 'pdf', 50 * 1024 * 1024)
-    if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
-    const url = await uploadFile(supabase, pdfFile, 'books', `pdf-${id}`)
-    if (url) updates.pdf_url = url
+    const pdfFile = formData.get('pdf') as File | null
+    if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
+      const err = validateFile(pdfFile, 'pdf', 50 * 1024 * 1024)
+      if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
+      const url = await uploadFile(supabase, pdfFile, 'books', `pdf-${id}`)
+      if (url) updates.pdf_url = url
+    }
+  } catch (uploadErr) {
+    console.error('book file upload error:', uploadErr)
+    return NextResponse.json(
+      { error: "Échec de l'envoi du fichier. Réessaie." },
+      { status: 500 }
+    )
   }
 
   // regen slug if title changed
@@ -137,7 +149,8 @@ export async function PUT(
     .select()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('book PUT error:', error.message)
+    return NextResponse.json({ error: 'Impossible de mettre à jour le livre.' }, { status: 500 })
   }
 
   if (!data || data.length === 0) {
@@ -158,7 +171,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient(request)
+  const supabase = createRequestClient(request)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
 
@@ -174,27 +187,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Introuvable ou accès refusé.' }, { status: 404 })
   }
 
-  // delete storage files via admin client (bypasses RLS)
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (serviceRoleKey) {
-    const admin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey
-    )
-    const paths = [book.cover_url, book.epub_url, book.pdf_url]
-      .map(extractStoragePath)
-      .filter(Boolean) as { bucket: string; path: string }[]
-    const byBucket: Record<string, string[]> = {}
-    for (const { bucket, path } of paths) {
-      (byBucket[bucket] ??= []).push(path)
-    }
-    await Promise.all(
-      Object.entries(byBucket).map(([bucket, files]) =>
-        admin.storage.from(bucket).remove(files)
-      )
-    )
-  }
-
+  // Supprimer d'abord la ligne en base, puis les fichiers (évite les données orphelines).
   const { error } = await supabase
     .from('books')
     .delete()
@@ -202,7 +195,33 @@ export async function DELETE(
     .eq('user_id', user.id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('book DELETE error:', error.message)
+    return NextResponse.json({ error: 'Impossible de supprimer le livre.' }, { status: 500 })
+  }
+
+  // Suppression des fichiers via admin (best effort, ne bloque pas la réponse).
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (serviceRoleKey) {
+    try {
+      const admin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey
+      )
+      const paths = [book.cover_url, book.epub_url, book.pdf_url]
+        .map(extractStoragePath)
+        .filter(Boolean) as { bucket: string; path: string }[]
+      const byBucket: Record<string, string[]> = {}
+      for (const { bucket, path } of paths) {
+        (byBucket[bucket] ??= []).push(path)
+      }
+      await Promise.all(
+        Object.entries(byBucket).map(([bucket, files]) =>
+          admin.storage.from(bucket).remove(files)
+        )
+      )
+    } catch (err) {
+      console.error('Suppression des fichiers échouée:', err)
+    }
   }
 
   return NextResponse.json({ success: true })

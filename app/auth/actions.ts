@@ -1,12 +1,15 @@
 'use server'
 
 import { createClient } from '@/lib/supabase-server'
-import { redirect } from 'next/navigation'
 
 export async function signup(formData: FormData) {
-  const email = formData.get('email') as string
+  const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = formData.get('password') as string
   const supabase = await createClient()
+
+  if (!email || !password) {
+    return { error: 'Email et mot de passe requis.' }
+  }
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -22,7 +25,7 @@ export async function signup(formData: FormData) {
 }
 
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string
+  const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = formData.get('password') as string
   const supabase = await createClient()
 
@@ -35,40 +38,3 @@ export async function login(formData: FormData) {
   return { success: true }
 }
 
-export async function resetPassword(formData: FormData) {
-  try {
-    const email = formData.get('email') as string
-    const supabase = await createClient()
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/update-password`,
-    })
-
-    if (error) {
-      return { error: error.message }
-    }
-
-    return { success: 'Un email de réinitialisation a été envoyé. Vérifie ta boîte de réception.' }
-  } catch (err) {
-    return { error: `Erreur : ${(err as Error).message}` }
-  }
-}
-
-export async function updatePassword(formData: FormData) {
-  const password = formData.get('password') as string
-  const supabase = await createClient()
-
-  const { error } = await supabase.auth.updateUser({ password })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  redirect('/auth')
-}
-
-export async function logout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/auth')
-}

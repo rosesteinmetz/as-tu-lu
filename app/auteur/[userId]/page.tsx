@@ -46,6 +46,41 @@ function initials(name: string) {
   return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
+type AuthorBook = {
+  id: string
+  slug?: string | null
+  title: string
+  description?: string | null
+  genre: string
+  cover_url?: string | null
+  is_free?: boolean
+  external_link?: string | null
+}
+
+function BookRowContent({ book }: { book: AuthorBook }) {
+  return (
+    <>
+      {book.cover_url ? (
+        <img src={book.cover_url} alt={book.title} className="w-16 aspect-[210/297] object-contain bg-gray-100 rounded-lg flex-shrink-0" />
+      ) : (
+        <div className="w-16 aspect-[210/297] bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
+      )}
+      <div>
+        <h3 className="font-bold text-gray-900">{book.title}</h3>
+        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{book.description}</p>
+        <div className="flex gap-2 mt-2 flex-wrap">
+          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
+          {book.is_free !== false ? (
+            <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
+          ) : (
+            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">EN VENTE</span>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default async function AuteurIndividuelPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
   const { profile, books } = await getData(userId);
@@ -104,30 +139,16 @@ export default async function AuteurIndividuelPage({ params }: { params: Promise
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {books.map((book) => {
               const bookHref = book.slug ? `/livre/${book.slug}` : `/book/${book.id}`;
-              const BookLink = book.external_link && book.is_free === false
-                ? ({ children, ...props }: any) => <a href={book.external_link!} target="_blank" rel="noopener noreferrer" {...props}>{children}</a>
-                : ({ children, ...props }: any) => <Link href={bookHref} {...props}>{children}</Link>;
+              const cardClass = "bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4";
 
-              return (
-                <BookLink key={book.id} className="bg-white p-4 rounded-xl border border-gray-100 hover:shadow-lg transition flex gap-4">
-                  {book.cover_url ? (
-                    <img src={book.cover_url} alt={book.title} className="w-16 aspect-[210/297] object-contain bg-gray-100 rounded-lg flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 aspect-[210/297] bg-blue-900 text-white rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">Couv.</div>
-                  )}
-                  <div>
-                    <h3 className="font-bold text-gray-900">{book.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{book.description}</p>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">{book.genre}</span>
-                      {book.is_free !== false ? (
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">EN VENTE</span>
-                      )}
-                    </div>
-                  </div>
-                </BookLink>
+              return book.external_link && book.is_free === false ? (
+                <a key={book.id} href={book.external_link} target="_blank" rel="noopener noreferrer" className={cardClass}>
+                  <BookRowContent book={book} />
+                </a>
+              ) : (
+                <Link key={book.id} href={bookHref} className={cardClass}>
+                  <BookRowContent book={book} />
+                </Link>
               );
             })}
           </div>

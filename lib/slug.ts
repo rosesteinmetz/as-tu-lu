@@ -8,8 +8,10 @@ export function slugify(text: string): string {
     .slice(0, 100)
 }
 
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 export async function ensureUniqueSlug(
-  supabase: any,
+  supabase: SupabaseClient,
   table: string,
   baseSlug: string,
   excludeId?: string
@@ -17,9 +19,9 @@ export async function ensureUniqueSlug(
   let slug = baseSlug || 'untitled'
   let i = 1
   while (true) {
-    let query = supabase.from(table).select('id').eq('slug', slug).maybeSingle()
+    let query = supabase.from(table).select('id').eq('slug', slug)
     if (excludeId) query = query.neq('id', excludeId)
-    const { data } = await query
+    const { data } = await query.maybeSingle()
     if (!data) return slug
     slug = `${baseSlug}-${i}`
     i++

@@ -34,7 +34,7 @@ export default async function AuteurListPage() {
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-4xl mx-auto">
         <Link href="/" className="text-blue-600 text-sm hover:underline mb-6 inline-block">
-          &larr; Retour à l'accueil
+          &larr; Retour à l’accueil
         </Link>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Nos auteurs</h1>

@@ -1,47 +1,13 @@
-import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
 import { validateFile } from '@/lib/file-validator'
+import { createRequestClient, createAnonClient } from '@/lib/supabase-request'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 
-async function createClient(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-
-  const cookieHeader = request.headers.get('cookie') || ''
-  const cookies = cookieHeader.split(';').map(c => {
-    const [name, ...rest] = c.trim().split('=')
-    return { name, value: rest.join('=') }
-  }).filter(c => c.name)
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookies },
-        setAll() {},
-      },
-    }
-  )
-
-  if (token) {
-    await supabase.auth.setSession({
-      access_token: token,
-      refresh_token: '',
-    })
-  }
-
-  return supabase
-}
-
 export async function GET(request: Request) {
-  const publicClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const publicClient = createAnonClient()
 
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get('user_id')
@@ -55,14 +21,15 @@ export async function GET(request: Request) {
   const { data: books, error } = await query.order('sort_order', { ascending: true }).order('created_at', { ascending: true })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('books GET error:', error.message)
+    return NextResponse.json({ error: 'Impossible de charger les livres.' }, { status: 500 })
   }
 
   return NextResponse.json(books)
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient(request)
+  const supabase = createRequestClient(request)
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
@@ -80,6 +47,14 @@ export async function POST(request: Request) {
   const coverFile = formData.get('cover') as File | null
   const epubFile = formData.get('epub') as File | null
   const pdfFile = formData.get('pdf') as File | null
+
+  if (!title?.trim() || !author?.trim() || !description?.trim()) {
+    return NextResponse.json({ error: 'Titre, auteur et description sont requis.' }, { status: 400 })
+  }
+
+  if (!genre?.trim()) {
+    return NextResponse.json({ error: 'Le genre littéraire est requis.' }, { status: 400 })
+  }
 
   for (const f of [epubFile, pdfFile]) {
     if (f && f.size > MAX_FILE_SIZE) {
@@ -198,6 +173,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(bookData, { status: 201 })
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 })
+    console.error('books POST error:', err)
+    return NextResponse.json({ error: "Impossible de publier le livre." }, { status: 500 })
   }
 }

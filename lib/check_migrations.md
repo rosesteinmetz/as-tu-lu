@@ -1,16 +1,36 @@
-# Comment vérifier les migrations SQL dans Supabase
+# Migrations Supabase
 
-Pour vérifier que toutes les migrations ont été exécutées :
+Toutes les migrations sont désormais regroupées dans **un seul fichier idempotent** :
+`lib/migrations.sql` (tables, colonnes, index, fonctions, RLS, Storage).
 
-1. Va sur https://app.supabase.com/project/puyirglxlackdmdupved/sql
-2. Ouvre "SQL Editor" → "History" pour voir les requêtes déjà exécutées
-3. Vérifie la présence de : rate_limits table, colonnes slug, download_token, is_free...
+## Exécuter les migrations
 
-Vérification rapide par tables :
-- `books` doit avoir : slug, is_free, external_link, sort_order
-- `author_profiles` doit avoir : slug
-- `subscribers` doit avoir : download_token
-- `rate_limits` doit exister avec RLS
-- `storage.buckets` bucket `books` (public/privé selon ton choix)
+Deux méthodes :
 
-Pour corriger le RLS INSERT books : exécute `migration-securite-2.sql` si besoin.
+1. **Automatique** (recommandé) — nécessite `DATABASE_URL` dans `.env.local`
+   (Supabase → Connect → connection string Postgres) :
+
+   ```sh
+   npm run db:migrate
+   ```
+
+2. **Manuelle** — copier le contenu de `lib/migrations.sql` dans le
+   [SQL Editor](https://app.supabase.com/project/puyirglxlackdmdupved/sql/new).
+
+Le fichier est idempotent : il peut être ré-exécuté sans risque.
+
+## Migration Storage (buckets images / books)
+
+Le schéma/policies Storage sont dans `lib/migrations.sql`. Le déplacement des
+objets et la réécriture des URLs se font via :
+
+- `npm run storage:dry-run` (aperçu, ne modifie rien)
+- `npm run storage:migrate` (déplace les images vers `images`, met à jour les URLs, passe `books` en privé)
+
+## Vérification rapide
+
+- `books` : slug, is_free, external_link, sort_order
+- `author_profiles` : slug
+- `subscribers` : download_token, colonnes de consentement RGPD
+- `rate_limits` : existe avec RLS
+- `storage.buckets` : `images` = **public**, `books` = **privé** (eBooks uniquement)

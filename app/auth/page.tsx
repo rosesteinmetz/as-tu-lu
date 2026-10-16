@@ -1,15 +1,24 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { login, signup } from './actions';
 
-export default function AuthPage() {
+function AuthForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<'login' | 'signup'>(
+    searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(searchParams.get('error') || '');
   const [submitting, setSubmitting] = useState(false);
+
+  function switchMode(next: 'login' | 'signup') {
+    setMode(next);
+    setMessage('');
+    setError('');
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,7 +36,7 @@ export default function AuthPage() {
     } else if (mode === 'login') {
       router.push('/dashboard');
     } else {
-      setMessage((result as any)?.success || 'Compte créé !');
+      setMessage(typeof result?.success === 'string' ? result.success : 'Compte créé !');
       setSubmitting(false);
     }
   }
@@ -46,7 +55,7 @@ export default function AuthPage() {
           <input name="email" type="email" placeholder="Email" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required />
           <input name="password" type="password" placeholder="Mot de passe" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required minLength={6} />
           <button type="submit" disabled={submitting} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
-            {submitting ? 'Connexion...' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+            {submitting ? (mode === 'login' ? 'Connexion...' : 'Création...') : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
           </button>
           {mode === 'login' && (
             <Link href="/auth/reset-password" className="text-xs text-blue-600 hover:underline text-center">
@@ -58,15 +67,23 @@ export default function AuthPage() {
         <p className="text-center text-sm text-gray-600 mt-6">
           {mode === 'login' ? (
             <>Pas encore de compte ?{' '}
-              <button onClick={() => setMode('signup')} className="text-blue-600 underline">S&apos;inscrire</button>
+              <button onClick={() => switchMode('signup')} className="text-blue-600 underline">S&apos;inscrire</button>
             </>
           ) : (
             <>Déjà un compte ?{' '}
-              <button onClick={() => setMode('login')} className="text-blue-600 underline">Se connecter</button>
+              <button onClick={() => switchMode('login')} className="text-blue-600 underline">Se connecter</button>
             </>
           )}
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 text-gray-500">Chargement...</div>}>
+      <AuthForm />
+    </Suspense>
   );
 }
