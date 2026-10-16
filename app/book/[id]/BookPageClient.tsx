@@ -20,14 +20,13 @@ type Book = {
 export default function BookPageClient({ book }: { book: Book }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
-  const [consentTransmission, setConsentTransmission] = useState(false)
-  const [consentNewsletter, setConsentNewsletter] = useState(false)
+  const [consent, setConsent] = useState(false)
   const [showKindleHelp, setShowKindleHelp] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [subError, setSubError] = useState('')
 
   const isPaid = book.is_free === false
-  const allConsented = consentTransmission && consentNewsletter
+  const allConsented = consent
 
   const handleDownload = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,8 +40,8 @@ export default function BookPageClient({ book }: { book: Book }) {
       body: JSON.stringify({
         email,
         book_id: book.id,
-        consent_transmission: consentTransmission,
-        consent_newsletter: consentNewsletter,
+        consent_transmission: consent,
+        consent_newsletter: consent,
         terms_version: '1.0',
       }),
     })
@@ -127,12 +126,8 @@ export default function BookPageClient({ book }: { book: Book }) {
                 required
               />
               <label className="flex gap-2 text-xs text-gray-500 items-start">
-                <input type="checkbox" checked={consentTransmission} onChange={(e) => setConsentTransmission(e.target.checked)} required className="mt-0.5" />
-                J&apos;accepte la transmission de mon adresse email à l&apos;auteur pour recevoir le livre.
-              </label>
-              <label className="flex gap-2 text-xs text-gray-500 items-start">
-                <input type="checkbox" checked={consentNewsletter} onChange={(e) => setConsentNewsletter(e.target.checked)} required className="mt-0.5" />
-                J&apos;accepte de recevoir la newsletter et les actualités de l&apos;auteur.
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required className="mt-0.5" />
+                J&apos;accepte de recevoir ce livre gratuit en échange de mon inscription à la newsletter et aux actualités de l&apos;auteur. Mon adresse email sera transmise à l&apos;auteur pour l&apos;envoi du livre et des emails.
               </label>
               <button type="submit" disabled={!allConsented || submitting} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
                 {submitting ? 'Inscription en cours...' : 'Recevoir le livre (ePub, PDF, Kindle)'}

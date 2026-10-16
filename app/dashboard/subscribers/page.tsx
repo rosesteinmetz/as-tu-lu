@@ -45,12 +45,11 @@ export default function SubscribersPage() {
   }, []);
 
   const exportCSV = () => {
-    const headers = ['Email', 'Livre', 'Consentement transmission', 'Consentement newsletter', 'Date consentement', 'IP', 'Version CGU', 'Date inscription'];
+    const headers = ['Email', 'Livre',       'Inscription (livre+newsletter)', 'Date consentement', 'IP', 'Version CGU', 'Date inscription'];
     const rows = subscribers.map((s) => [
       s.email,
       s.books?.title || '',
-      s.consent_transmission ? 'Oui' : 'Non',
-      s.consent_newsletter ? 'Oui' : 'Non',
+      (s.consent_transmission && s.consent_newsletter) ? 'Oui' : 'Non',
       s.consent_date ? new Date(s.consent_date).toLocaleString('fr-FR') : '',
       s.ip_address,
       s.terms_version,
@@ -97,7 +96,7 @@ export default function SubscribersPage() {
               <tr className="bg-gray-50 text-left text-gray-600">
                 <th className="p-3 font-medium">Email</th>
                 <th className="p-3 font-medium">Livre</th>
-                <th className="p-3 font-medium">Consentements</th>
+                 <th className="p-3 font-medium">Inscription</th>
                 <th className="p-3 font-medium">Date</th>
                 <th className="p-3 font-medium">IP</th>
               </tr>
