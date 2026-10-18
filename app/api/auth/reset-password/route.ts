@@ -40,7 +40,22 @@ export async function POST(req: Request) {
     })
 
     if (error) {
-      console.error('reset-password error:', error.message)
+      const status = (error as { status?: number }).status
+      const code = (error as { code?: string }).code
+      console.error('reset-password error:', { name: error.name, message: error.message, status, code })
+
+      if (status && status >= 500) {
+        return Response.json(
+          { error: "Le service d'envoi d'emails est momentanément indisponible. Réessaie dans quelques minutes." },
+          { status: 503 }
+        )
+      }
+      if (status === 429 || code === 'over_email_send_rate_limit') {
+        return Response.json(
+          { error: "Trop de demandes d'email. Réessaie dans quelques minutes." },
+          { status: 429 }
+        )
+      }
       return Response.json({ error: "Impossible d'envoyer l'email de réinitialisation." }, { status: 400 })
     }
 
