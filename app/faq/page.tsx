@@ -18,7 +18,7 @@ export default function FAQPage() {
     },
     {
       q: "Quels formats d'ebook sont acceptés ?",
-      a: "Tu peux proposer tes livres aux formats ePub et PDF. Le format Kindle (MOBI) n'est plus utilisé — Amazon accepte désormais l'ePub directement via Send to Kindle. Chaque fichier est limité à 50 Mo sur le serveur, mais Vercel (l'hébergeur) limite chaque requête à ~4.5 Mo. Si ton fichier dépasse cette taille, tu dois le réduire (voir question suivante).",
+      a: "Tu peux proposer tes livres aux formats ePub et PDF. Le format Kindle (MOBI) n'est plus utilisé — Amazon accepte désormais l'ePub directement via Send to Kindle. Chaque envoi (couverture + ePub + PDF) est limité à 4 Mo, car l'hébergeur (Vercel) rejette les requêtes au-delà de ~4,5 Mo. Un livre numérique de cette taille est largement suffisant ; si le tien est plus lourd, réduis-le (voir question suivante).",
     },
     {
       q: "Comment réduire la taille de mes fichiers EPUB/PDF ?",

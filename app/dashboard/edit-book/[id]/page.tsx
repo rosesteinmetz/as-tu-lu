@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
+import { MAX_EBOOK_BYTES, totalFileSize, toMo } from '@/lib/file-validator';
 import Link from 'next/link';
 
 export default function EditBookPage() {
@@ -61,23 +62,57 @@ export default function EditBookPage() {
     formData.append('description', description);
     formData.append('is_free', String(isFree));
     if (externalLink) formData.append('external_link', externalLink);
-    if (cover) formData.append('cover', await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION }));
+
+    const compressedCover = cover
+      ? await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION, maxSizeMB: 0.4 })
+      : null;
+    if (compressedCover) formData.append('cover', compressedCover);
     if (epub) formData.append('epub', epub);
     if (pdf) formData.append('pdf', pdf);
 
-    const res = await fetch(`/api/books/${id}`, {
-      method: 'PUT',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
-      body: formData,
-    });
+    try {
+      const tooBig = [epub, pdf].some((f) => f && f.size > MAX_EBOOK_BYTES);
+      const totalBytes = totalFileSize(compressedCover, epub, pdf);
+      if (tooBig || totalBytes > MAX_EBOOK_BYTES) {
+        setMessage(
+          `Erreur : ${
+            tooBig
+              ? `un fichier dépasse ${toMo(MAX_EBOOK_BYTES)}. Voir la FAQ « Comment réduire la taille de mes fichiers EPUB/PDF ? ».`
+              : `couverture + fichiers = ${toMo(totalBytes)}, au-dessus de la limite de ${toMo(MAX_EBOOK_BYTES)} par envoi. Réduis la couverture ou retire un fichier.`
+          }`
+        );
+        return;
+      }
 
-    const data = await res.json();
-    if (!res.ok) {
-      setMessage(`Erreur : ${data.error}`);
-    } else {
-      setMessage('Livre mis à jour !');
+      const res = await fetch(`/api/books/${id}`, {
+        method: 'PUT',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+
+      let data: { error?: string } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        setMessage(
+          `Erreur : ${
+            res.status === 413
+              ? 'le fichier est trop volumineux (limite ~4,5 Mo). Voir la FAQ "Comment réduire la taille de mes fichiers EPUB/PDF ?".'
+              : (data?.error || `réponse ${res.status} du serveur.`)
+          }`
+        );
+      } else {
+        setMessage('Livre mis à jour !');
+      }
+    } catch {
+      setMessage('Erreur : impossible de contacter le serveur.');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleDelete = async () => {
@@ -92,8 +127,13 @@ export default function EditBookPage() {
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      setMessage(`Erreur : ${data.error}`);
+      let data: { error?: string } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+      setMessage(`Erreur : ${data?.error || `réponse ${res.status} du serveur.`}`);
       return;
     }
     router.push('/dashboard');
@@ -214,7 +254,7 @@ export default function EditBookPage() {
                 <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
+            <p className="text-xs text-gray-400 mt-1">Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>. Chaque envoi (couverture + fichiers) est limité à {toMo(MAX_EBOOK_BYTES)}.</p>
           </div>
         )}
 

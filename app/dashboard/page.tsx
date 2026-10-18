@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
+import { MAX_EBOOK_BYTES, totalFileSize, toMo } from '@/lib/file-validator';
 
 type Book = { id: string; title: string; author: string; genre: string; cover_url: string | null; sort_order: number };
 
@@ -76,13 +77,28 @@ export default function DashboardAuteur() {
     formData.append('description', description);
     formData.append('is_free', String(isFree));
     if (externalLink) formData.append('external_link', externalLink);
-    if (cover) {
-      formData.append('cover', await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION }));
-    }
+
+    const compressedCover = cover
+      ? await compressImage(cover, { maxWidthOrHeight: IMAGE_MAX_DIMENSION, maxSizeMB: 0.4 })
+      : null;
+    if (compressedCover) formData.append('cover', compressedCover);
     if (epub) formData.append('epub', epub);
     if (pdf) formData.append('pdf', pdf);
 
     try {
+      const tooBig = [epub, pdf].some((f) => f && f.size > MAX_EBOOK_BYTES);
+      const totalBytes = totalFileSize(compressedCover, epub, pdf);
+      if (tooBig || totalBytes > MAX_EBOOK_BYTES) {
+        setMessage(
+          `Erreur : ${
+            tooBig
+              ? `un fichier dépasse ${toMo(MAX_EBOOK_BYTES)}. Voir la FAQ « Comment réduire la taille de mes fichiers EPUB/PDF ? ».`
+              : `couverture + fichiers = ${toMo(totalBytes)}, au-dessus de la limite de ${toMo(MAX_EBOOK_BYTES)} par envoi. Réduis la couverture ou retire un fichier.`
+          }`
+        );
+        return;
+      }
+
       const res = await fetch('/api/books', {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
@@ -290,7 +306,7 @@ export default function DashboardAuteur() {
                 <input type="file" accept=".pdf" onChange={(e) => setPdf(e.target.files?.[0] || null)} className="text-xs w-full" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>.</p>
+            <p className="text-xs text-gray-400 mt-1">Le format Kindle (MOBI) n’est plus requis — Amazon accepte l’ePub directement via <a href="https://www.amazon.fr/sendtokindle" target="_blank" className="text-blue-500 underline">Send to Kindle</a>. Chaque envoi (couverture + fichiers) est limité à {toMo(MAX_EBOOK_BYTES)}.</p>
           </div>
           )}
 

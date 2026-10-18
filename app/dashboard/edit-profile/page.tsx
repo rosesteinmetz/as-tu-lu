@@ -1,8 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { compressImage, IMAGE_MAX_DIMENSION } from '@/lib/compress';
 import Link from 'next/link';
+
+type PhotoEntry = string | { file: File; url: string };
 
 export default function EditProfilePage() {
   const [name, setName] = useState('');
@@ -10,10 +12,28 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [photos, setPhotos] = useState<(string | File)[]>([]);
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const photosRef = useRef<PhotoEntry[]>(photos);
+
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+
+  useEffect(() => {
+    const ref = photosRef;
+    return () => {
+      ref.current.forEach((p) => {
+        if (typeof p === 'object') URL.revokeObjectURL(p.url);
+      });
+    };
+  }, []);
+
+  const photoSrc = (p: PhotoEntry) => (typeof p === 'string' ? p : p.url);
 
   async function apiFetch(path: string, options?: RequestInit) {
     const supabase = createClient();
@@ -40,50 +60,82 @@ export default function EditProfilePage() {
 
   const handlePhotoAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const existingUrls = photos.filter((p): p is string => typeof p === 'string');
-    const slotsLeft = 5 - existingUrls.length;
-    const compressed = await Promise.all(files.slice(0, slotsLeft).map((f) => compressImage(f, { maxWidthOrHeight: IMAGE_MAX_DIMENSION })));
-    setPhotos([...existingUrls, ...compressed]);
+    const slotsLeft = 5 - photos.length;
+    if (slotsLeft <= 0) return;
+    // Compression agressive : le corps de requête Vercel est plafonné à ~4,5 Mo.
+    const compressed = await Promise.all(
+      files.slice(0, slotsLeft).map((f) => compressImage(f, { maxWidthOrHeight: IMAGE_MAX_DIMENSION, maxSizeMB: 0.4 }))
+    );
+    setPhotos([...photos, ...compressed.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    e.target.value = '';
   };
 
   const removePhoto = (index: number) => {
-    const existingUrls = photos.filter((p): p is string => typeof p === 'string');
-    existingUrls.splice(index, 1);
-    setPhotos(existingUrls);
+    const removed = photos[index];
+    if (typeof removed === 'object') URL.revokeObjectURL(removed.url);
+    setPhotos(photos.filter((_, i) => i !== index));
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaved(false);
     setError('');
+    setSubmitting(true);
 
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('tagline', tagline);
-    formData.append('bio', bio);
-    formData.append('keep_avatar', avatarUrl);
-    if (avatarFile) formData.append('avatar', await compressImage(avatarFile, { maxWidthOrHeight: 400 }));
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('tagline', tagline);
+      formData.append('bio', bio);
+      formData.append('keep_avatar', avatarUrl);
 
-    const existingUrls = photos.filter((p): p is string => typeof p === 'string');
-    formData.append('keep_photos', JSON.stringify(existingUrls));
+      const parts: File[] = [];
+      if (avatarFile) parts.push(await compressImage(avatarFile, { maxWidthOrHeight: 400, maxSizeMB: 0.3 }));
 
-    const newFiles = photos.filter((p): p is File => p instanceof File);
-    newFiles.forEach((f) => formData.append('photos', f));
+      const existingUrls = photos.filter((p): p is string => typeof p === 'string');
+      formData.append('keep_photos', JSON.stringify(existingUrls));
 
-    const res = await apiFetch('/api/profile', { method: 'POST', body: formData });
-    if (!res.ok) {
-      const d = await res.json();
-      setError(d.error || 'Erreur');
-      return;
+      const newEntries = photos.filter((p): p is { file: File; url: string } => typeof p === 'object');
+      newEntries.forEach((entry) => parts.push(entry.file));
+      parts.forEach((f) => formData.append('photos', f));
+
+      const totalBytes = parts.reduce((sum, f) => sum + f.size, 0);
+      if (totalBytes > 3_500_000) {
+        setError('Les photos sont trop volumineuses. Retire ou réduis-en (3 Mo max au total).');
+        return;
+      }
+
+      const res = await apiFetch('/api/profile', { method: 'POST', body: formData });
+
+      let data: { error?: string; photo_urls?: string[] } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        setError(
+          res.status === 413
+            ? 'Photos trop volumineuses pour être envoyées d\u2019un coup. Réduis leur nombre ou leur taille.'
+            : (data?.error || `Erreur ${res.status}. Réessaie.`)
+        );
+        return;
+      }
+
+      photos.forEach((p) => {
+        if (typeof p === 'object') URL.revokeObjectURL(p.url);
+      });
+      setPhotos(data?.photo_urls || existingUrls);
+      setSaved(true);
+    } catch {
+      setError('Impossible d\u2019enregistrer le profil. Réessaie.');
+    } finally {
+      setSubmitting(false);
     }
-    const d = await res.json();
-    setPhotos(d.photo_urls || []);
-    setSaved(true);
   };
 
   if (loading) return <div className="p-8 max-w-2xl mx-auto text-gray-500">Chargement...</div>;
-
-  const existingUrls = photos.filter((p): p is string => typeof p === 'string');
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -120,25 +172,29 @@ export default function EditProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Photos de l’univers ({existingUrls.length}/5)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Photos de l’univers ({photos.length}/5)</label>
           <div className="grid grid-cols-5 gap-2 mb-3">
-            {existingUrls.map((url, i) => (
+            {photos.map((p, i) => (
               <div key={i} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
-                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                <img src={photoSrc(p)} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                 <button type="button" onClick={() => removePhoto(i)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition">&times;</button>
               </div>
             ))}
-            {Array.from({ length: 5 - existingUrls.length }).map((_, i) => (
+            {Array.from({ length: 5 - photos.length }).map((_, i) => (
               <div key={`empty-${i}`} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">Vide</div>
             ))}
           </div>
-          {existingUrls.length < 5 && (
+          {photos.length < 5 && (
             <input type="file" accept="image/*" multiple onChange={handlePhotoAdd} className="text-sm" />
           )}
         </div>
 
-        <button type="submit" className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm">
-          Sauvegarder le profil
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50"
+        >
+          {submitting ? 'Enregistrement en cours...' : 'Sauvegarder le profil'}
         </button>
       </form>
     </div>

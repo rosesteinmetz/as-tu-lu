@@ -7,16 +7,62 @@ type CompressOptions = {
 };
 
 const DEFAULTS: CompressOptions = {
-  maxSizeMB: 1,
+  maxSizeMB: 0.6,
   maxWidthOrHeight: 800,
   useWebWorker: true,
 };
+
+// WebP fait ~30-50 % plus léger qu'un JPEG de même qualité, et préserve l'alpha des PNG.
+const WEBP_QUALITY = 0.8;
+const JPEG_QUALITY = 0.85;
+
+const EXT_BY_TYPE: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+let encodeTypePromise: Promise<string> | null = null;
+
+function detectEncodeType(): Promise<string> {
+  if (!encodeTypePromise) {
+    encodeTypePromise = new Promise((resolve) => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        canvas.toBlob((blob) => resolve(blob ? 'image/webp' : 'image/jpeg'), 'image/webp', WEBP_QUALITY);
+      } catch {
+        resolve('image/jpeg');
+      }
+    });
+  }
+  return encodeTypePromise;
+}
+
+function withExtension(name: string, type: string): string {
+  const ext = EXT_BY_TYPE[type];
+  if (!ext) return name;
+  const base = name.replace(/\.[^./\\]+$/, '');
+  return `${base || 'image'}.${ext}`;
+}
+
+function toBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    try {
+      canvas.toBlob((blob) => resolve(blob), type, quality);
+    } catch {
+      resolve(null);
+    }
+  });
+}
 
 function roundTo8(n: number): number {
   return Math.round(n / 8) * 8;
 }
 
-async function enforceCanvasSize(file: File, maxDim: number): Promise<File> {
+async function enforceCanvasSize(file: File, maxDim: number, encodeType: string): Promise<File> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const i = new Image();
     i.onload = () => resolve(i);
@@ -51,29 +97,37 @@ async function enforceCanvasSize(file: File, maxDim: number): Promise<File> {
 
   URL.revokeObjectURL(img.src);
 
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => {
-      if (b) resolve(b);
-      else reject(new Error('Canvas toBlob failed'));
-    }, file.type, 0.92);
-  });
+  // WebP d'abord, JPEG en secours si le navigateur ne sait pas encoder le WebP.
+  const isWebp = encodeType === 'image/webp';
+  let blob = await toBlob(canvas, encodeType, isWebp ? WEBP_QUALITY : JPEG_QUALITY);
+  let type = encodeType;
+  if (!blob) {
+    blob = await toBlob(canvas, 'image/jpeg', JPEG_QUALITY);
+    type = 'image/jpeg';
+  }
+  if (!blob) throw new Error('Canvas toBlob failed');
 
-  return new File([blob], file.name, { type: file.type });
+  const finalType = blob.type.startsWith('image/') ? blob.type : type;
+
+  return new File([blob], withExtension(file.name, finalType), {
+    type: finalType,
+    lastModified: file.lastModified,
+  });
 }
 
 export async function compressImage(file: File, options: CompressOptions = {}): Promise<File> {
   if (!file.type.startsWith('image/')) return file;
 
-  const opts = { ...DEFAULTS, ...options };
+  const encodeType = await detectEncodeType();
+  const opts = { ...DEFAULTS, ...options, fileType: encodeType };
 
   try {
     const compressed = await imageCompression(file, opts);
-    return await enforceCanvasSize(compressed, opts.maxWidthOrHeight || 800);
+    return await enforceCanvasSize(compressed, opts.maxWidthOrHeight || 800, encodeType);
   } catch {
     return file;
   }
 }
 
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 export const MAX_IMAGE_SIZE = 100 * 1024 * 1024;
 export const IMAGE_MAX_DIMENSION = 800;

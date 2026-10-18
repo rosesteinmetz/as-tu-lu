@@ -1,10 +1,8 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { slugify, ensureUniqueSlug } from '@/lib/slug'
-import { validateFile } from '@/lib/file-validator'
+import { validateFile, MAX_EBOOK_BYTES, totalFileSize, toMo } from '@/lib/file-validator'
 import { createRequestClient, createAnonClient } from '@/lib/supabase-request'
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 export async function GET(request: Request) {
   const publicClient = createAnonClient()
@@ -57,21 +55,26 @@ export async function POST(request: Request) {
   }
 
   for (const f of [epubFile, pdfFile]) {
-    if (f && f.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `Un des fichiers dépasse 50 Mo.` }, { status: 400 })
+    if (f && f.size > MAX_EBOOK_BYTES) {
+      return NextResponse.json({ error: `Un des fichiers dépasse ${toMo(MAX_EBOOK_BYTES)}. Réduis-le (voir la FAQ « Comment réduire la taille de mes fichiers EPUB/PDF ? »).` }, { status: 400 })
     }
   }
 
+  const totalBytes = totalFileSize(coverFile, epubFile, pdfFile)
+  if (totalBytes > MAX_EBOOK_BYTES) {
+    return NextResponse.json({ error: `Couverture et fichiers font ${toMo(totalBytes)} au total, au-delà de la limite de ${toMo(MAX_EBOOK_BYTES)} par envoi. Retire la couverture ou réduis les fichiers.` }, { status: 400 })
+  }
+
   if (coverFile && coverFile.size > 0) {
-    const err = validateFile(coverFile, 'images', 10 * 1024 * 1024)
+    const err = validateFile(coverFile, 'images', MAX_EBOOK_BYTES)
     if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
   }
   if (epubFile && epubFile.size > 0) {
-    const err = validateFile(epubFile, 'epub', MAX_FILE_SIZE)
+    const err = validateFile(epubFile, 'epub', MAX_EBOOK_BYTES)
     if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
   }
   if (pdfFile && pdfFile.size > 0) {
-    const err = validateFile(pdfFile, 'pdf', MAX_FILE_SIZE)
+    const err = validateFile(pdfFile, 'pdf', MAX_EBOOK_BYTES)
     if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
   }
 
@@ -87,7 +90,10 @@ export async function POST(request: Request) {
     const fileName = `${folder}/${baseName}.${ext}`
     const { error } = await supabase.storage
       .from(bucket)
-      .upload(fileName, file)
+      .upload(fileName, file, {
+        contentType: file.type,
+        upsert: true,
+      })
 
     if (error) throw new Error(error.message)
 
