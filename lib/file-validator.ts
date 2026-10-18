@@ -1,14 +1,14 @@
 // Vercel limite le corps de requête des fonctions serveur à ~4,5 Mo : au-delà, la requête est
 // rejetée par l'hébergeur avant même d'atteindre le code applicatif (413 en texte brut).
 // On plafonne donc chaque envoi mixte (couverture + ePub + PDF) à 4 Mo, marge comprise.
-export const MAX_EBOOK_BYTES = 4 * 1024 * 1024
+export const MAX_EBOOK_BYTES = 4_000_000
 
 export function totalFileSize(...files: (File | null | undefined)[]): number {
   return files.reduce((total, file) => total + (file && file.size > 0 ? file.size : 0), 0)
 }
 
 export function toMo(bytes: number): string {
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+  return `${(bytes / 1_000_000).toFixed(1)} Mo`
 }
 
 const ALLOWED = {
