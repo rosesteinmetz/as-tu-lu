@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { isAdminEmail } from '@/lib/admin'
 import { listAuthors } from '@/lib/author-directory'
+import { platformAuthorsListId } from '@/lib/newsletter'
+import SyncBrevoButton from './SyncBrevoButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +18,7 @@ export default async function AdminAuthorsPage() {
   const authors = await listAuthors()
   const consented = authors.filter((a) => a.consent)
   const confirmed = authors.filter((a) => a.email_confirmed)
+  const brevoListId = platformAuthorsListId()
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -26,9 +29,18 @@ export default async function AdminAuthorsPage() {
 
       <div className="flex flex-wrap justify-between items-center gap-3 mt-4 mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Auteurs inscrits</h1>
-        <a href="/api/admin/authors" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-          Télécharger la liste (CSV)
-        </a>
+        <div className="flex flex-wrap items-center gap-3">
+          <a href="/api/admin/authors" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+            Télécharger la liste (CSV)
+          </a>
+          <SyncBrevoButton />
+        </div>
+      </div>
+
+      <div className="bg-purple-50 p-4 rounded-lg text-xs text-purple-700 mb-6">
+        {brevoListId
+          ? <>Chaque nouvel auteur est automatiquement ajouté à la liste Brevo n° {brevoListId} (« Auteurs As-tu-lu ») dès qu’il confirme son email. Le bouton « Synchroniser » rattrape les comptes déjà inscrits ; il est idempotent, tu peux le relancer sans crainte.</>
+          : <>La liste Brevo des auteurs n’est pas configurée (<code>PLATFORM_BREVO_AUTHORS_LIST_ID</code> manquant) : les nouveaux inscrits ne sont pas ajoutés automatiquement.</>}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

@@ -209,6 +209,71 @@ async function forwardToBrevo(email: string, config: NewsletterConfig) {
   }
 }
 
+/**
+ * Liste Brevo « Auteurs » de la plateforme. Distincte des listes lecteur, qui
+ * vivent chacune dans le compte Brevo de l'auteur concerné (newsletter_settings).
+ */
+export function platformAuthorsListId(): number {
+  const id = parseInt((process.env.PLATFORM_BREVO_AUTHORS_LIST_ID || '').trim(), 10)
+  return Number.isFinite(id) && id > 0 ? id : 0
+}
+
+/**
+ * Ajoute un auteur à la liste Brevo de la plateforme. Idempotent : un contact
+ * déjà présent est simplement rattaché à la liste.
+ * Renvoie 'ok', 'duplicate' (déjà présent), 'ignoré' (non configuré) ou une erreur.
+ */
+export async function addAuthorToPlatformBrevo(email: string): Promise<string> {
+  const apiKey = process.env.PLATFORM_BREVO_API_KEY
+  const listId = platformAuthorsListId()
+  if (!apiKey || !listId) return 'ignoré'
+
+  const address = email.trim().toLowerCase()
+  if (!address) return 'ignoré'
+
+  const response = await fetch('https://api.brevo.com/v3/contacts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+    body: JSON.stringify({ email: address, updateEnabled: true, listIds: [listId] }),
+  })
+
+  // 201 = contact créé, 204 = contact existant (rattaché ou mis à jour).
+  if (response.status === 201) return 'ok'
+  if (response.status === 204) return 'duplicate'
+  if (response.ok) return 'ok'
+
+  const errorBody = await response.text()
+  if (response.status === 400 && /duplicate/i.test(errorBody)) return 'duplicate'
+  return `Brevo ${response.status}: ${errorBody.slice(0, 200)}`
+}
+
+/**
+ * Retire un auteur de la liste Brevo de la plateforme (le contact est conservé,
+ * seul le rattachement à la liste est supprimé). Utilisé à la suppression de compte.
+ */
+export async function removeAuthorFromPlatformBrevo(email: string): Promise<string> {
+  const apiKey = process.env.PLATFORM_BREVO_API_KEY
+  const listId = platformAuthorsListId()
+  if (!apiKey || !listId) return 'ignoré'
+
+  const address = email.trim().toLowerCase()
+  if (!address) return 'ignoré'
+
+  const response = await fetch(
+    `https://api.brevo.com/v3/contacts/lists/${listId}/contacts/remove`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+      body: JSON.stringify({ emails: [address] }),
+    }
+  )
+
+  if (response.ok) return 'ok'
+  const errorBody = await response.text()
+  if (response.status === 404) return 'ok'
+  return `Brevo ${response.status}: ${errorBody.slice(0, 200)}`
+}
+
 async function forwardToMailerLite(email: string, config: NewsletterConfig) {
   const body: { email: string; groups?: string[] } = { email }
 

@@ -1,6 +1,7 @@
 import { type EmailOtpType } from '@supabase/supabase-js'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { addAuthorToPlatformBrevo } from '@/lib/newsletter'
 
 function safeNext(next: string | null): string {
   if (!next) return '/dashboard'
@@ -8,6 +9,22 @@ function safeNext(next: string | null): string {
     return '/dashboard'
   }
   return next
+}
+
+/**
+ * Ajoute l'auteur à la liste Brevo de la plateforme, après la réponse pour ne
+ * pas ralentir la redirection. Idempotent : un auteur déjà présent est ignoré.
+ */
+function scheduleAuthorSync(email: string | undefined) {
+  if (!email) return
+  after(async () => {
+    try {
+      const result = await addAuthorToPlatformBrevo(email)
+      if (result.startsWith('Brevo')) console.error('sync auteurs Brevo:', email, result)
+    } catch (err) {
+      console.error('sync auteurs Brevo exception:', email, (err as Error).message)
+    }
+  })
 }
 
 export async function GET(request: NextRequest) {
@@ -21,16 +38,18 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      if (data.user?.email_confirmed_at) scheduleAuthorSync(data.user.email)
       return NextResponse.redirect(new URL(destination, request.url))
     }
   }
 
   if (token_hash && type) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type })
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (!error) {
+      if (type === 'signup') scheduleAuthorSync(data.user?.email)
       return NextResponse.redirect(new URL(destination, request.url))
     }
   }
