@@ -1,6 +1,6 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { slugify, ensureUniqueSlug } from '@/lib/slug'
+import { slugify, ensureUniqueSlug, ebookBaseName } from '@/lib/slug'
 import { validateFile, MAX_EBOOK_BYTES, totalFileSize, toMo } from '@/lib/file-validator'
 import { createRequestClient, createAnonClient, type RequestClient } from '@/lib/supabase-request'
 
@@ -39,16 +39,16 @@ async function uploadFile(
   supabase: RequestClient,
   file: File,
   bucket: string,
-  prefix: string
+  path: string
 ): Promise<string | null> {
-  const ext = file.name.split('.').pop() || 'bin'
-  const fileName = `${prefix}-${Date.now()}.${ext}`
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
+  const fileName = `${path}.${ext}`
 
   const { error } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, {
       contentType: file.type,
-      upsert: false,
+      upsert: true,
     })
 
   if (error) throw new Error(error.message)
@@ -58,6 +58,13 @@ async function uploadFile(
     .getPublicUrl(fileName)
 
   return urlData?.publicUrl || null
+}
+
+/** Chemin dans le bucket « books » à partir d'une URL publique ou signée. */
+function bookStoragePath(url: string | null | undefined): string | null {
+  if (!url) return null
+  const match = url.match(/\/object\/(?:public|authenticated)\/books\/(.+?)(?:\?.*)?$/)
+  return match ? decodeURIComponent(match[1]) : null
 }
 
 export async function PUT(
@@ -72,7 +79,7 @@ export async function PUT(
   // Vérifier la propriété AVANT tout upload de fichier.
   const { data: owned } = await supabase
     .from('books')
-    .select('id')
+    .select('id, title, author, epub_url, pdf_url')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -112,25 +119,29 @@ export async function PUT(
     return NextResponse.json({ error: `Couverture et fichiers font ${toMo(totalBytes)} au total, au-delà de la limite de ${toMo(MAX_EBOOK_BYTES)} par envoi. Retire la couverture ou réduis les fichiers.` }, { status: 400 })
   }
 
+  // Les fichiers portent toujours le nom « titre_auteur », y compris à la modification.
+  const baseName = ebookBaseName(title, author)
+  const previousBaseName = ebookBaseName(owned.title || '', owned.author || '')
+
   try {
     if (coverFile && coverFile.size > 0 && coverFile.name) {
       const err = validateFile(coverFile, 'images', MAX_EBOOK_BYTES)
       if (err) return NextResponse.json({ error: `Couverture : ${err}` }, { status: 400 })
-      const url = await uploadFile(supabase, coverFile, 'images', `covers/${id}`)
+      const url = await uploadFile(supabase, coverFile, 'images', `covers/${baseName}`)
       if (url) updates.cover_url = url
     }
 
     if (epubFile && epubFile.size > 0 && epubFile.name) {
       const err = validateFile(epubFile, 'epub', MAX_EBOOK_BYTES)
       if (err) return NextResponse.json({ error: `ePub : ${err}` }, { status: 400 })
-      const url = await uploadFile(supabase, epubFile, 'books', `epub-${id}`)
+      const url = await uploadFile(supabase, epubFile, 'books', `epub/${baseName}`)
       if (url) updates.epub_url = url
     }
 
     if (pdfFile && pdfFile.size > 0 && pdfFile.name) {
       const err = validateFile(pdfFile, 'pdf', MAX_EBOOK_BYTES)
       if (err) return NextResponse.json({ error: `PDF : ${err}` }, { status: 400 })
-      const url = await uploadFile(supabase, pdfFile, 'books', `pdf-${id}`)
+      const url = await uploadFile(supabase, pdfFile, 'books', `pdf/${baseName}`)
       if (url) updates.pdf_url = url
     }
   } catch (uploadErr) {
@@ -139,6 +150,29 @@ export async function PUT(
       { error: "Échec de l'envoi du fichier. Réessaie." },
       { status: 500 }
     )
+  }
+
+  // Titre ou auteur modifié sans nouvel envoi : on renomme les fichiers existants.
+  if (previousBaseName !== baseName) {
+    const renameExisting = async (field: 'epub_url' | 'pdf_url', folder: 'epub' | 'pdf') => {
+      if (updates[field]) return // un nouveau fichier vient d'être envoyé
+      const source = bookStoragePath(owned[field] as string | null)
+      if (!source) return
+      const ext = source.split('.').pop()?.toLowerCase() || ''
+      const target = `${folder}/${baseName}.${ext}`
+      if (source === target) return
+
+      const { error: moveError } = await supabase.storage.from('books').move(source, target)
+      if (moveError) {
+        console.error(`book rename (${field}) error:`, moveError.message)
+        return
+      }
+      const { data } = supabase.storage.from('books').getPublicUrl(target)
+      if (data?.publicUrl) updates[field] = data.publicUrl
+    }
+
+    await renameExisting('epub_url', 'epub')
+    await renameExisting('pdf_url', 'pdf')
   }
 
   // regen slug if title changed

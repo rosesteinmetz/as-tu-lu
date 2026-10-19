@@ -1,6 +1,6 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { slugify, ensureUniqueSlug } from '@/lib/slug'
+import { slugify, ensureUniqueSlug, ebookBaseName } from '@/lib/slug'
 import { validateFile, MAX_EBOOK_BYTES, totalFileSize, toMo } from '@/lib/file-validator'
 import { createRequestClient, createAnonClient } from '@/lib/supabase-request'
 
@@ -82,12 +82,11 @@ export async function POST(request: Request) {
   let epub_url = null
   let pdf_url = null
 
-  const slug = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase()
-  const baseName = `${slug(title)}_${slug(author)}`
+  const baseName = ebookBaseName(title, author)
 
-  const uploadFile = async (file: File, bucket: string, folder: string) => {
-    const ext = file.name.split('.').pop()
-    const fileName = `${folder}/${baseName}.${ext}`
+  const uploadFile = async (file: File, bucket: string, path: string) => {
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
+    const fileName = ext ? `${path}.${ext}` : path
     const { error } = await supabase.storage
       .from(bucket)
       .upload(fileName, file, {
@@ -106,13 +105,13 @@ export async function POST(request: Request) {
 
   try {
     if (coverFile && coverFile.size > 0) {
-      cover_url = await uploadFile(coverFile, 'images', 'covers')
+      cover_url = await uploadFile(coverFile, 'images', `covers/${baseName}`)
     }
     if (epubFile && epubFile.size > 0) {
-      epub_url = await uploadFile(epubFile, 'books', 'epub')
+      epub_url = await uploadFile(epubFile, 'books', `epub/${baseName}`)
     }
     if (pdfFile && pdfFile.size > 0) {
-      pdf_url = await uploadFile(pdfFile, 'books', 'pdf')
+      pdf_url = await uploadFile(pdfFile, 'books', `pdf/${baseName}`)
     }
 
     const { data: maxOrder } = await supabase
