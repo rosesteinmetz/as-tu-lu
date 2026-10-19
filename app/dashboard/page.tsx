@@ -23,6 +23,7 @@ export default function DashboardAuteur() {
   const [loading, setLoading] = useState(false);
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [formKey, setFormKey] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -36,6 +37,11 @@ export default function DashboardAuteur() {
         .then((r) => r.json())
         .then((data) => { if (Array.isArray(data)) setBooks(data); setLoadingBooks(false); })
         .catch(() => setLoadingBooks(false));
+
+      fetch('/api/admin/status', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((data) => setIsAdmin(data?.isAdmin === true))
+        .catch(() => setIsAdmin(false));
     });
   }, [router]);
   const [message, setMessage] = useState('');
@@ -149,6 +155,9 @@ export default function DashboardAuteur() {
           <Link href="/dashboard/subscribers" className="text-sm text-gray-500 hover:text-blue-600 underline">Abonnés</Link>
           <Link href="/dashboard/settings" className="text-sm text-gray-500 hover:text-blue-600 underline">Newsletter</Link>
           <Link href="/dashboard/account" className="text-sm text-gray-500 hover:text-blue-600 underline">Mon compte</Link>
+          {isAdmin && (
+            <Link href="/admin/auteurs" className="text-sm text-purple-600 hover:text-purple-800 font-semibold underline">Auteurs (admin)</Link>
+          )}
           <form action="/auth/logout" method="post">
             <button type="submit" className="text-sm text-gray-500 hover:text-red-600 underline">Déconnexion</button>
           </form>
