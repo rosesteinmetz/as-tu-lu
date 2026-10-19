@@ -11,10 +11,22 @@ export async function signup(formData: FormData) {
     return { error: 'Email et mot de passe requis.' }
   }
 
+  const consent = formData.get('consent') != null
+  if (!consent) {
+    return { error: "Merci de cocher la case pour accepter de recevoir les informations d'As-tu-lu." }
+  }
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/confirm` },
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/confirm`,
+      data: {
+        newsletter_consent: true,
+        newsletter_consent_at: new Date().toISOString(),
+        newsletter_consent_version: '1.0',
+      },
+    },
   })
 
   if (error) {

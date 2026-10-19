@@ -48,7 +48,11 @@ export default function CGUAuteurs() {
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">6. Services tiers</h2>
         <p className="text-gray-600 text-sm leading-relaxed">L’auteur peut transférer les adresses collectées vers son service d’emailing (Brevo, MailerLite, ConvertKit ou autre). Il lui appartient de s’assurer du respect des obligations légales applicables.</p>
 
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">7. Retrait de contenu</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">7. Communications d’As-tu-lu</h2>
+        <p className="text-gray-600 text-sm leading-relaxed">En créant un compte, l’auteur accepte de recevoir les communications d’As-tu-lu.fr (actualités, nouveautés et informations liées au fonctionnement de la plateforme) à l’adresse email fournie à l’inscription. Ces messages sont envoyés par l’administratrice du site et sont sans lien avec la newsletter qu’un lecteur peut rejoindre auprès d’un auteur.</p>
+        <p className="text-gray-600 text-sm leading-relaxed mt-1">L’auteur peut retirer cet accord et se désinscrire à tout moment, notamment en supprimant son compte depuis son espace.</p>
+
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">8. Retrait de contenu</h2>
         <p className="text-gray-600 text-sm leading-relaxed">As-tu-lu.fr peut suspendre ou supprimer tout contenu :</p>
         <ul className="list-disc pl-6 text-gray-600 text-sm leading-relaxed mt-1 space-y-1">
           <li>faisant l’objet d’une réclamation légitime ;</li>
@@ -56,10 +60,10 @@ export default function CGUAuteurs() {
           <li>contraire aux présentes conditions.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">8. Limitation de responsabilité</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">9. Limitation de responsabilité</h2>
         <p className="text-gray-600 text-sm leading-relaxed">As-tu-lu.fr agit comme intermédiaire technique et hébergeur des contenus publiés par les auteurs. As-tu-lu.fr ne garantit ni le succès commercial d’une œuvre ni le nombre de téléchargements obtenus.</p>
 
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">9. Résiliation</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">10. Résiliation</h2>
         <p className="text-gray-600 text-sm leading-relaxed">L’auteur peut demander à tout moment la suppression de son compte et de ses contenus. As-tu-lu.fr peut suspendre ou supprimer un compte en cas de violation des présentes conditions.</p>
       </div>
     </div>

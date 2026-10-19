@@ -54,6 +54,15 @@ function AuthForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input name="email" type="email" placeholder="Email" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required />
           <input name="password" type="password" placeholder="Mot de passe" className="border p-3 rounded-lg text-sm text-gray-900 placeholder:text-gray-500" required minLength={6} />
+          {mode === 'signup' && (
+            <label className="flex gap-2 text-xs text-gray-600 items-start">
+              <input name="consent" type="checkbox" required className="mt-0.5" />
+              <span>
+                J&apos;accepte de recevoir les informations d&apos;As-tu-lu par email (nouveautés et actualités de la
+                plateforme). Je peux me désinscrire à tout moment.
+              </span>
+            </label>
+          )}
           <button type="submit" disabled={submitting} className="bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition text-sm disabled:opacity-50">
             {submitting ? (mode === 'login' ? 'Connexion...' : 'Création...') : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
           </button>
