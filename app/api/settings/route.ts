@@ -16,7 +16,10 @@ export async function GET(request: Request) {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  return NextResponse.json(data || { provider: 'brevo', api_key: '', list_id: '', webhook_url: '', notify_email: '' })
+  return NextResponse.json(
+    data || { provider: 'brevo', api_key: '', list_id: '', webhook_url: '', notify_email: '' },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }
 
 export async function POST(request: Request) {

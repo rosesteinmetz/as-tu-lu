@@ -37,6 +37,8 @@ export async function signup(formData: FormData) {
     return { error: 'Impossible de créer le compte. Vérifie ton email et réessaie.' }
   }
 
+  await supabase.auth.signOut()
+
   return { success: 'Compte créé ! Vérifie tes emails pour confirmer.' }
 }
 

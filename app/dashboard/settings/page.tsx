@@ -26,17 +26,20 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    apiFetch('/api/settings')
-      .then((r) => r.json())
+    let active = true;
+    apiFetch('/api/settings', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        setProvider(data.provider || 'brevo');
-        setApiKey(data.api_key || '');
-        setListId(data.list_id || '');
-        setWebhookUrl(data.webhook_url || '');
-        setNotifyEmail(data.notify_email || '');
+        if (!active) return;
+        setProvider(data?.provider || 'brevo');
+        setApiKey(data?.api_key || '');
+        setListId(data?.list_id || '');
+        setWebhookUrl(data?.webhook_url || '');
+        setNotifyEmail(data?.notify_email || '');
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -74,7 +77,7 @@ export default function SettingsPage() {
       {saved && <p className="bg-green-100 text-green-700 p-3 rounded-lg text-sm mb-4">Paramètres sauvegardés !</p>}
       {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-4">{error}</p>}
 
-      <form onSubmit={handleSave} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col gap-5">
+      <form onSubmit={handleSave} autoComplete="off" className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col gap-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Service de newsletter</label>
           <select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm bg-white">
@@ -88,21 +91,21 @@ export default function SettingsPage() {
         {(provider === 'brevo' || provider === 'mailerlite') && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Clé API</label>
-            <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder={provider === 'brevo' ? 'Votre clé API Brevo' : 'Votre clé API MailerLite'} />
+            <input type="password" name="newsletter-api-key" autoComplete="new-password" data-lpignore="true" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder={provider === 'brevo' ? 'Votre clé API Brevo' : 'Votre clé API MailerLite'} />
           </div>
         )}
 
         {(provider === 'brevo' || provider === 'mailerlite') && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ID de liste <span className="text-gray-400 font-normal">(optionnel)</span></label>
-            <input type="text" value={listId} onChange={(e) => setListId(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="Laisse vide pour utiliser la liste par défaut" />
+            <input type="text" name="newsletter-list-id" autoComplete="off" data-lpignore="true" value={listId} onChange={(e) => setListId(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="Laisse vide pour utiliser la liste par défaut" />
           </div>
         )}
 
         {provider === 'webhook' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">URL du Webhook</label>
-            <input type="url" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="https://ton-service.com/webhook" />
+            <input type="url" name="newsletter-webhook-url" autoComplete="off" data-lpignore="true" value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="https://ton-service.com/webhook" />
           </div>
         )}
 
@@ -111,7 +114,7 @@ export default function SettingsPage() {
           <p className="text-xs text-gray-500 mb-3">Reçois un email à chaque nouvel inscrit (avec son email et les consentements donnés). Fonctionne pour tous les services.</p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ton email de notification</label>
-            <input type="email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="ton@email.com" />
+            <input type="email" name="newsletter-notify-email" autoComplete="off" data-lpignore="true" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm" placeholder="ton@email.com" />
           </div>
         </div>
 
