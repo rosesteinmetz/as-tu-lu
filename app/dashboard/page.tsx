@@ -148,6 +148,7 @@ export default function DashboardAuteur() {
           <Link href="/dashboard/edit-profile" className="text-sm text-gray-500 hover:text-blue-600 underline">Profil</Link>
           <Link href="/dashboard/subscribers" className="text-sm text-gray-500 hover:text-blue-600 underline">Abonnés</Link>
           <Link href="/dashboard/settings" className="text-sm text-gray-500 hover:text-blue-600 underline">Newsletter</Link>
+          <Link href="/dashboard/account" className="text-sm text-gray-500 hover:text-blue-600 underline">Mon compte</Link>
           <form action="/auth/logout" method="post">
             <button type="submit" className="text-sm text-gray-500 hover:text-red-600 underline">Déconnexion</button>
           </form>
