@@ -19,6 +19,7 @@ export default function EditProfilePage() {
   const [submitting, setSubmitting] = useState(false);
 
   const photosRef = useRef<PhotoEntry[]>(photos);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     photosRef.current = photos;
@@ -89,17 +90,21 @@ export default function EditProfilePage() {
       formData.append('bio', bio);
       formData.append('keep_avatar', avatarUrl);
 
-      const parts: File[] = [];
-      if (avatarFile) parts.push(await compressImage(avatarFile, { maxWidthOrHeight: 400, maxSizeMB: 0.3 }));
+      const photoFiles: File[] = photos
+        .filter((p): p is { file: File; url: string } => typeof p === 'object')
+        .map((entry) => entry.file);
+      photoFiles.forEach((f) => formData.append('photos', f));
 
       const existingUrls = photos.filter((p): p is string => typeof p === 'string');
       formData.append('keep_photos', JSON.stringify(existingUrls));
 
-      const newEntries = photos.filter((p): p is { file: File; url: string } => typeof p === 'object');
-      newEntries.forEach((entry) => parts.push(entry.file));
-      parts.forEach((f) => formData.append('photos', f));
+      let avatar: File | null = null;
+      if (avatarFile) {
+        avatar = await compressImage(avatarFile, { maxWidthOrHeight: 400, maxSizeMB: 0.3 });
+        formData.append('avatar', avatar);
+      }
 
-      const totalBytes = parts.reduce((sum, f) => sum + f.size, 0);
+      const totalBytes = photoFiles.reduce((sum, f) => sum + f.size, 0) + (avatar ? avatar.size : 0);
       if (totalBytes > 3_500_000) {
         setError('Les photos sont trop volumineuses. Retire ou réduis-en (3 Mo max au total).');
         return;
@@ -107,7 +112,7 @@ export default function EditProfilePage() {
 
       const res = await apiFetch('/api/profile', { method: 'POST', body: formData });
 
-      let data: { error?: string; photo_urls?: string[] } | null = null;
+      let data: { error?: string; photo_urls?: string[]; avatar_url?: string } | null = null;
       try {
         data = await res.json();
       } catch {
@@ -127,6 +132,9 @@ export default function EditProfilePage() {
         if (typeof p === 'object') URL.revokeObjectURL(p.url);
       });
       setPhotos(data?.photo_urls || existingUrls);
+      if (typeof data?.avatar_url === 'string') setAvatarUrl(data.avatar_url);
+      setAvatarFile(null);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
       setSaved(true);
     } catch {
       setError('Impossible d\u2019enregistrer le profil. Réessaie.');
@@ -163,7 +171,7 @@ export default function EditProfilePage() {
               <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
             </div>
           )}
-          <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} className="text-sm w-full" />
+          <input ref={avatarInputRef} type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] || null)} className="text-sm w-full" />
         </div>
 
         <div>

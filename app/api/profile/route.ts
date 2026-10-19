@@ -100,5 +100,5 @@ export async function POST(request: Request) {
     console.error('profile POST error:', error.message)
     return NextResponse.json({ error: "Impossible d'enregistrer le profil." }, { status: 500 })
   }
-  return NextResponse.json({ success: true, photo_urls: allPhotos })
+  return NextResponse.json({ success: true, photo_urls: allPhotos, avatar_url })
 }
