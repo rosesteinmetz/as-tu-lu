@@ -47,7 +47,7 @@ function CardContent({ book, goToAuthor }: { book: Book; goToAuthor: (e: React.S
         {book.is_free !== false ? (
           <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">GRATUIT</span>
         ) : (
-          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">EN VENTE</span>
+          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">EN VENTE · Lien affilié</span>
         )}
       </div>
       {book.is_free !== false && (
