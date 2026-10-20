@@ -215,7 +215,7 @@ export default function EditBookPage() {
 
           {!isFree && (
             <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lien d’achat (Amazon, Fnac, etc.)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lien d’achat ou lien affilié (Amazon, Fnac, Kobo, etc.)</label>
               <input
                 type="url"
                 value={externalLink}

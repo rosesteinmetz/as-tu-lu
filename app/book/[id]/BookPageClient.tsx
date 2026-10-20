@@ -108,7 +108,7 @@ export default function BookPageClient({ book }: { book: Book }) {
                 rel="noopener noreferrer"
                 className="bg-amber-600 text-white p-3 rounded-lg font-bold hover:bg-amber-700 transition text-sm text-center block"
               >
-                Acheter sur la librairie partenaire
+                Acheter sur la librairie partenaire / via mon lien affilié
               </a>
             ) : (
               <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">

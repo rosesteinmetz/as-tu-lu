@@ -63,8 +63,10 @@ export default function CGUAuteurs() {
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">9. Limitation de responsabilité</h2>
         <p className="text-gray-600 text-sm leading-relaxed">As-tu-lu.fr agit comme intermédiaire technique et hébergeur des contenus publiés par les auteurs. As-tu-lu.fr ne garantit ni le succès commercial d’une œuvre ni le nombre de téléchargements obtenus.</p>
 
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">10. Résiliation</h2>
-        <p className="text-gray-600 text-sm leading-relaxed">L’auteur peut demander à tout moment la suppression de son compte et de ses contenus. As-tu-lu.fr peut suspendre ou supprimer un compte en cas de violation des présentes conditions.</p>
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">11. Livres payants et liens d’achat</h2>
+        <p className="text-gray-600 text-sm leading-relaxed">L’auteur peut proposer un livre « payant » en indiquant un lien externe vers une librairie ou un programme d’affiliation (Amazon, Fnac, Kobo, etc.).</p>
+        <p className="text-gray-600 text-sm leading-relaxed mt-1">L’auteur est seul responsable de la légalité, de la transparence et du respect des conditions applicables aux liens qu’il utilise, y compris les liens affiliés. As-tu-lu.fr n’encaisse aucune somme pour ces ventes et ne fournit aucune garantie à ce titre.</p>
+        <p className="text-gray-600 text-sm leading-relaxed mt-1">L’auteur s’engage à ne pas utiliser de liens trompeurs et à respecter les règles de la plateforme vers laquelle il renvoie les lecteurs.</p>
       </div>
     </div>
   );

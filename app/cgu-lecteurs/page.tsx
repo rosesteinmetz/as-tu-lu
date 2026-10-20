@@ -41,11 +41,8 @@ export default function CGULecteurs() {
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">11. Signalement de contenu</h2>
         <p className="text-gray-600 text-sm leading-relaxed">Toute personne estimant qu’un contenu porte atteinte à ses droits peut adresser une demande à : <a href="mailto:contact@as-tu-lu.fr" className="text-blue-600 underline">contact@as-tu-lu.fr</a>. As-tu-lu.fr examinera chaque demande dans les meilleurs délais.</p>
 
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">12. Modification des CGU</h2>
-        <p className="text-gray-600 text-sm leading-relaxed">Les présentes CGU peuvent être modifiées à tout moment. Les utilisateurs sont invités à consulter régulièrement la version la plus récente.</p>
-
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">13. Droit applicable</h2>
-        <p className="text-gray-600 text-sm leading-relaxed">Les présentes CGU sont soumises au droit suisse. Tout litige relatif à leur interprétation ou à leur exécution relèvera des juridictions compétentes du domicile de l’exploitant du site, sauf disposition légale impérative contraire.</p>
+        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">12. Livres payants</h2>
+        <p className="text-gray-600 text-sm leading-relaxed">Certains livres renvoient vers un lien externe (librairie en ligne) fourni par l’auteur. Ce lien peut être un lien affilié. As-tu-lu.fr n’est pas partie à la transaction et ne garantit pas le prix, la disponibilité ou les conditions de vente de ces ouvrages.</p>
       </div>
     </div>
   );
