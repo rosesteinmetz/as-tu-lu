@@ -10,7 +10,7 @@ export default function FAQPage() {
     },
     {
       q: "Comment réinitialiser mon mot de passe ?",
-      a: "Sur la page de connexion, clique sur 'Mot de passe oublié ?'. Saisis ton email, tu recevras un lien pour choisir un nouveau mot de passe. (Nécessite SMTP configuré dans Supabase Auth pour recevoir l'email.)",
+      a: "Sur la page de connexion, clique sur 'Mot de passe oublié ?'. Saisis ton email, tu recevras un lien pour choisir un nouveau mot de passe.",
     },
     {
       q: "Comment ajouter un livre ?",
@@ -26,15 +26,15 @@ export default function FAQPage() {
     },
     {
       q: "Comment les lecteurs téléchargent-ils mes livres ?",
-      a: "Les lecteurs arrivent sur la page de ton livre, remplissent leur email, cochent les cases RGPD (transmission de l'email + inscription newsletter), puis cliquent sur 'Télécharger'. Ils sont redirigés vers une page de confirmation où ils peuvent télécharger le fichier. L'email est automatiquement envoyé à Brevo si la newsletter est activée.",
+      a: "Les lecteurs arrivent sur la page de ton livre, remplissent leur email, cochent les cases RGPD (transmission de l'email + inscription newsletter), puis cliquent sur 'Télécharger'. Ils sont redirigés vers une page de confirmation où ils peuvent télécharger le fichier. L'email est automatiquement envoyé vers ton outil d'emailing s'il est activé dans tes paramètres.",
     },
     {
-      q: "Comment configurer l'envoi vers ma newsletter (Brevo) ?",
-      a: "Va dans Espace Auteur → Newsletter. Remplis ta clé API Brevo (trouvable dans Brevo → SMTP & API → Clés API), l'ID de ta liste (dans Brevo → Contacts → Listes → ID), et ton email de notification (pour être prévenu des nouveaux inscrits). Teste avec un lecteur pour vérifier.",
+      q: "Comment configurer l'envoi vers ma newsletter ?",
+      a: "Va dans Espace Auteur → Newsletter. Remplis ta clé API de ton outil d'emailing (Brevo, MailerLite, etc.), l'ID de ta liste si nécessaire et ton email de notification (pour être prévenu des nouveaux inscrits). Teste avec un lecteur pour vérifier.",
     },
     {
-      q: "Mes abonnés apparaissent-ils automatiquement dans Brevo ?",
-      a: "Oui, dès qu'un lecteur coche la case 'J'accepte de recevoir la newsletter' et télécharge un livre, son email est ajouté à ta liste Brevo automatiquement.",
+      q: "Mes abonnés apparaissent-ils automatiquement dans mon outil d'emailing ?",
+      a: "Oui, dès qu'un lecteur coche la case 'J'accepte de recevoir la newsletter' et télécharge un livre, son email est ajouté à ta liste automatiquement.",
     },
     {
       q: "Comment voir mes abonnés ?",
@@ -62,11 +62,11 @@ export default function FAQPage() {
     },
     {
       q: "Quelles sont les obligations RGPD ?",
-      a: "En tant qu'auteur, tu dois : 1) Informer les lecteurs que leur email est transmis à Brevo, 2) Obtenir leur consentement explicite (cases à cocher), 3) Leur permettre de se désabonner à tout moment (lien en bas de chaque email Brevo), 4) Ne pas partager leurs données avec d'autres services. Les CGU et la politique de confidentialité sont disponibles dans le footer.",
+      a: "En tant qu'auteur, tu dois : 1) Informer les lecteurs que leur email est transmis à ton outil d'emailing, 2) Obtenir leur consentement explicite (cases à cocher), 3) Leur permettre de se désabonner à tout moment (lien en bas de chaque email), 4) Ne pas partager leurs données avec d'autres services. Les CGU et la politique de confidentialité sont disponibles dans le footer.",
     },
     {
-      q: "Puis-je personnaliser les emails Brevo ?",
-      a: "Oui, connecte-toi à ton compte Brevo et personnalise les templates de tes campagnes. L'email de confirmation d'inscription est géré par Brevo, pas par As-tu lu.",
+      q: "Puis-je personnaliser mes emails ?",
+      a: "Oui, selon ton outil d'emailing tu peux personnaliser tes campagnes. L'email de confirmation de téléchargement est envoyé automatiquement par la plateforme.",
     },
     {
       q: "Y a-t-il une limite de téléchargements ?",
@@ -74,7 +74,7 @@ export default function FAQPage() {
     },
     {
       q: "Le site est-il gratuit ?",
-      a: "Oui, la plateforme est gratuite pour les auteurs et les lecteurs. Seul Brevo peut facturer selon ton volume d'emails (leur offre gratuite permet 300 emails/jour).",
+      a: "Oui, la plateforme est gratuite pour les auteurs et les lecteurs. Ton outil d'emailing peut avoir une limite sur son offre gratuite.",
     },
   ]
 

@@ -42,7 +42,7 @@ export default function MentionsLegales() {
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">Contact</h2>
         <p className="text-gray-600 text-sm leading-relaxed">
           Pour toute question concernant le site : <a href="mailto:contact@as-tu-lu.fr" className="text-blue-600 underline">contact@as-tu-lu.fr</a><br />
-          Pour toute demande relative aux droits d’auteur : <a href="mailto:copyright@as-tu-lu.fr" className="text-blue-600 underline">copyright@as-tu-lu.fr</a>
+          Pour toute demande relative aux droits d’auteur : <a href="mailto:contact@as-tu-lu.fr" className="text-blue-600 underline">contact@as-tu-lu.fr</a>
         </p>
       </div>
     </div>

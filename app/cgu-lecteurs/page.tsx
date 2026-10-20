@@ -39,7 +39,7 @@ export default function CGULecteurs() {
         <p className="text-gray-600 text-sm leading-relaxed">Le lecteur peut demander à tout moment la suppression de son compte et des données associées, sous réserve des obligations légales de conservation.</p>
 
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">11. Signalement de contenu</h2>
-        <p className="text-gray-600 text-sm leading-relaxed">Toute personne estimant qu’un contenu porte atteinte à ses droits peut adresser une demande à : <a href="mailto:copyright@as-tu-lu.fr" className="text-blue-600 underline">copyright@as-tu-lu.fr</a>. As-tu-lu.fr examinera chaque demande dans les meilleurs délais.</p>
+        <p className="text-gray-600 text-sm leading-relaxed">Toute personne estimant qu’un contenu porte atteinte à ses droits peut adresser une demande à : <a href="mailto:contact@as-tu-lu.fr" className="text-blue-600 underline">contact@as-tu-lu.fr</a>. As-tu-lu.fr examinera chaque demande dans les meilleurs délais.</p>
 
         <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">12. Modification des CGU</h2>
         <p className="text-gray-600 text-sm leading-relaxed">Les présentes CGU peuvent être modifiées à tout moment. Les utilisateurs sont invités à consulter régulièrement la version la plus récente.</p>
